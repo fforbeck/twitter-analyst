@@ -1,0 +1,15 @@
+ - install vertica db
+ - install activator
+ - start default java 8 project
+ - add into intelij
+ - add dependencies (spring, spring data, jpa, hibernate, jdbc, vertica driver in lib folder)
+ - persistence xml
+ - app conf db ds jdni dialect postgre
+ - spring init Global.java
+ - database connector vertica driver for intelij
+ - show sql, create sequence create table
+ - 
+
+
+
+
