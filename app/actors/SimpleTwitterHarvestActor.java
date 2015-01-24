@@ -5,14 +5,13 @@ import play.Configuration;
 import play.Play;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
-import twitter4j.auth.RequestToken;
 
 import java.util.List;
 
 /**
  *
  */
-public class TwitterHarvestActor extends UntypedActor {
+public class SimpleTwitterHarvestActor extends UntypedActor {
 
     private Twitter twitter;
 
