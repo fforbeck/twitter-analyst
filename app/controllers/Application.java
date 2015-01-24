@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import play.mvc.Controller;
 import play.mvc.Result;
 import repositories.TweetRepository;
+import services.TwitterHarvestService;
 
 import java.util.Date;
 
@@ -15,6 +16,9 @@ public class Application extends Controller {
 
     @Autowired
     private TweetRepository tweetRepository;
+
+    @Autowired
+    private TwitterHarvestService twitterHarvestService;
 
     public Application() {
     }

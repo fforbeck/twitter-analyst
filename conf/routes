@@ -7,8 +7,8 @@ GET        /                       @controllers.Application.index()
 
 
 # Twitter Analyst
-GET        /index                  controllers.TwitterActorSystem.index()
-GET        /search/:hashTag        controllers.TwitterActorSystem.search(hashTag)
+# GET         /                     controllers.TwitterAnalyst.index()
+#GET        /search/:hashTag        controllers.TwitterAnalyst.search(hashTag)
 
 
 # Map static resources from the /public folder to the /assets URL path

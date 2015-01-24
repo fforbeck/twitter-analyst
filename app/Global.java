@@ -1,7 +1,3 @@
-import actors.Message;
-import actors.TwitterHarvestActor;
-import akka.actor.ActorRef;
-import akka.actor.Props;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,12 +6,9 @@ import org.springframework.orm.hibernate3.HibernateExceptionTranslator;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import play.Application;
 import play.GlobalSettings;
-import play.libs.Akka;
-import scala.concurrent.duration.FiniteDuration;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Application wide behaviour. Setup spring app context for the dependency injection system,
@@ -25,7 +18,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Configuration
 public class Global extends GlobalSettings {
-
 
 
     /**
@@ -45,7 +37,6 @@ public class Global extends GlobalSettings {
     public void onStart(final Application app) {
         super.onStart(app);
         startJPAConfigs();
-        startTwitterHarvestActor();
     }
 
     /**
@@ -72,18 +63,10 @@ public class Global extends GlobalSettings {
      */
     private void startJPAConfigs() {
         ctx.register(SpringDataJpaConfiguration.class);
-        ctx.scan("models", "controllers", "repositories");
+        ctx.scan("models", "controllers", "repositories", "services");
         ctx.refresh();
         // Construct the beans and call any construction lifecycle methods e.g. @PostConstruct
         ctx.start();
-    }
-
-    /**
-     * Starts the twitter harvest actor to pool the twitter search API every 15 minutes to
-     * capture the data filtering by tag $HPQ.
-     */
-    private void startTwitterHarvestActor() {
-
     }
 
     /**

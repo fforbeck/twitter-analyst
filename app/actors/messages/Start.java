@@ -1,4 +1,4 @@
-package actors;
+package actors.messages;
 
 
 import twitter4j.Status;
@@ -8,12 +8,12 @@ import java.util.List;
 /**
  * Messages to communicate with Twitter Harvest Actor
  */
-public class Message {
+public class Start {
     private final String hashTag;
     private List<Status> tweets;
 
 
-    public Message(String hashTag) {
+    public Start(String hashTag) {
         this.hashTag = hashTag;
     }
 
