@@ -10,6 +10,7 @@ libraryDependencies ++= Seq(
   anorm,
   cache,
   ws,
+  javaWs,
   javaCore,
   javaJpa,
   "org.springframework" % "spring-context" % "3.2.2.RELEASE",
@@ -25,3 +26,4 @@ libraryDependencies ++= Seq(
 )
 
 unmanagedResourceDirectories in Test <+=  baseDirectory ( _ /"target/web/public/test" )
+

@@ -82,7 +82,7 @@ public class TweetReceiver extends UntypedActor {
                 tweet.put("user_id", status.getUser().getId());
                 tweet.put("user_name", status.getUser().getScreenName());
                 tweet.put("text", status.getText());
-                tweet.put("created_at", status.getCreatedAt());
+                tweet.put("created_at", status.getCreatedAt().toString());
                 tweet.put("hash_tag", hashTag);
                 return tweet;
             }

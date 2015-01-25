@@ -16,6 +16,8 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -103,7 +105,12 @@ public class TweetAnalyzer extends UntypedActor {
         tweet.user_id = (Long) tweetJson.get("user_id");
         tweet.text = (String) tweetJson.get("text");
         tweet.hash_tag = (String) tweetJson.get("hash_tag");
-        tweet.created_at = (Date) tweetJson.get("created_at");
+        try {
+            tweet.created_at = new SimpleDateFormat("dd/MM/yyyy").parse((String) tweetJson.get("created_at"));
+        } catch (ParseException e) {
+            log.error(e.getMessage() + ", invalid date: "  + tweetJson.get("created_at"));
+            tweet.created_at = new Date();
+        }
         tweet.sentiment = (String) aggregate.get("sentiment");
         tweet.sentiment_score = (Double) aggregate.get("score");
         return tweet;
