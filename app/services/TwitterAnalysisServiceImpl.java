@@ -13,8 +13,6 @@ import repositories.TweetRepository;
 import scala.concurrent.duration.FiniteDuration;
 
 import javax.annotation.PostConstruct;
-import java.util.Iterator;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -36,7 +34,7 @@ public class TwitterAnalysisServiceImpl implements TwitterAnalysisService {
     public void postConstruct() {
         actorSystem = ActorSystem.create("tweetAnalysisSystem");
 
-        final String hashTag = "#BBB,#Cezar";
+        final String hashTag = "#UFC";
         final String actorName = TweetSupervisor.class.getSimpleName();
         tweetSupervisor = actorSystem.actorOf(Props.create(TweetSupervisor.class), actorName);
 

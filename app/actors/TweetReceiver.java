@@ -2,11 +2,10 @@ package actors;
 
 import actors.messages.Read;
 import actors.messages.Start;
-import akka.actor.ActorRef;
-import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import org.json.simple.JSONObject;
 import play.Configuration;
 import play.Play;
 import redis.clients.jedis.Jedis;
@@ -36,7 +35,7 @@ public class TweetReceiver extends UntypedActor {
         if (twitterStream == null || !twitterStream.getAuthorization().isEnabled()) {
             authenticate();
         }
-        twitterStream.addListener(buildListener());
+        twitterStream.addListener(buildListener(start.getHashTag()));
 
         FilterQuery filterQuery = new FilterQuery()
         .track(start.getHashTag().split(","));
@@ -62,17 +61,30 @@ public class TweetReceiver extends UntypedActor {
         }
     }
 
-    private StatusListener buildListener() {
+    private StatusListener buildListener(final String hashTag) {
         return new StatusListener() {
             @Override
             public void onStatus(Status status) {
-                log.info(" { @" + status.getUser().getScreenName() +
-                                " - " + status.getText(),
-                        " - Date " + status.getCreatedAt() + " }");
+                JSONObject tweet = buildTweet(status, hashTag);
 
-                Jedis jedis = new Jedis(Play.application().configuration().getString("redis.host"));
-                System.out.println("Connection to server sucessfully");
-                System.out.println("Server is running: "+jedis.ping());
+                try {
+                    Jedis jedis = new Jedis(Play.application().configuration().getString("redis.host"));
+                    jedis.lpush("tweets-queue", tweet.toString());
+                    jedis.close();
+                    getContext().system().actorFor("user/" + TweetSupervisor.class.getSimpleName()).tell(new Read(hashTag), getSelf());
+                } catch (Exception e) {
+                    log.error(e.getMessage(), e);
+                }
+            }
+
+            private JSONObject buildTweet(Status status, String hashTag) {
+                JSONObject tweet = new JSONObject();
+                tweet.put("user_id", status.getUser().getId());
+                tweet.put("user_name", status.getUser().getScreenName());
+                tweet.put("text", status.getText());
+                tweet.put("created_at", status.getCreatedAt());
+                tweet.put("hash_tag", hashTag);
+                return tweet;
             }
 
             @Override

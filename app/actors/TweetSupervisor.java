@@ -1,22 +1,19 @@
 package actors;
 
-import static akka.actor.SupervisorStrategy.escalate;
-import static akka.actor.SupervisorStrategy.restart;
-import static akka.actor.SupervisorStrategy.stop;
-
 import actors.messages.Read;
 import actors.messages.Start;
 import akka.actor.*;
-import play.libs.Akka;
-import scala.concurrent.duration.Duration;
 import akka.actor.SupervisorStrategy.Directive;
-import akka.japi.Function;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Function;
+import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
-import twitter4j.TwitterException;
 
 import java.util.concurrent.TimeUnit;
+
+import static akka.actor.SupervisorStrategy.escalate;
+import static akka.actor.SupervisorStrategy.stop;
 
 /**
  *
@@ -27,23 +24,7 @@ public final class TweetSupervisor extends UntypedActor {
 
     private ActorRef tweetReceiverActor;
     private ActorRef tweetHarvesterActor;
-
-    @Override
-    public SupervisorStrategy supervisorStrategy() {
-        return strategy;
-    }
-
-    @Override
-    public void onReceive(Object message) throws Exception {
-        if (message instanceof Start) {
-            startSimpleTweetHarvester(((Start) message).getHashTag());
-            startRealtimeTweetReceiver(((Start) message).getHashTag());
-        } else if (message instanceof Read) {
-            readTweets(((Read) message).getHashTag());
-        } else {
-            unhandled(message);
-        }
-    }
+    private ActorRef tweetAnalyzerActor;
 
     private static SupervisorStrategy strategy = new OneForOneStrategy(10,
             Duration.create("10 second"),
@@ -56,6 +37,23 @@ public final class TweetSupervisor extends UntypedActor {
                 }
             }
     );
+
+    @Override
+    public SupervisorStrategy supervisorStrategy() {
+        return strategy;
+    }
+
+    @Override
+    public void onReceive(Object message) throws Exception {
+        if (message instanceof Start) {
+            //startSimpleTweetHarvester(((Start) message).getHashTag());
+            startRealtimeTweetReceiver(((Start) message).getHashTag());
+        } else if (message instanceof Read) {
+            startTweetAnalyzer(((Read) message).getHashTag());
+        } else {
+            unhandled(message);
+        }
+    }
 
     private void startSimpleTweetHarvester(String hashTag) {
         log.info("Starting tweet harvester for tag " + hashTag);
@@ -86,14 +84,23 @@ public final class TweetSupervisor extends UntypedActor {
             getContext().system().actorOf(Props.create(TweetReceiver.class), actorName);
         }
         tweetReceiverActor = getContext().system().actorFor("user/" + actorName);
-        tweetReceiverActor.tell(new Start(hashTag), getSender());
+        tweetReceiverActor.tell(new Start(hashTag), self());
 
         log.info("Tweet stream receiver started for tag " + hashTag);
     }
 
-    private void readTweets(String hashTag) {
-        log.info("Reading tweets from queue for hashTag " + hashTag);
+    private void startTweetAnalyzer(String hashTag) {
+        log.info("Starting tweet analyzer for " + hashTag);
 
+        final String actorName = TweetAnalyzer.class.getSimpleName();
+        if (tweetAnalyzerActor == null) {
+            getContext().system().actorOf(Props.create(TweetAnalyzer.class), actorName);
+        }
+        tweetAnalyzerActor = getContext().system().actorFor("user/" + actorName);
+        tweetAnalyzerActor.tell(new Read(hashTag), self());
+
+        log.info("Tweet analyzer started for tag " + hashTag);
     }
+
 
 }

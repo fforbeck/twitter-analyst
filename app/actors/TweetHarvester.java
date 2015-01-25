@@ -1,6 +1,5 @@
 package actors;
 
-import actors.messages.Read;
 import actors.messages.Start;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
@@ -66,7 +65,7 @@ public class TweetHarvester extends UntypedActor {
             printTweets(tweets);
             //start.setTweets(tweets);
             //put it into rabbit mq
-            sender().tell(new Read(hashTag), self());
+            //sender().tell(new Read(hashTag), self());
         } while ((query = result.nextQuery()) != null);
     }
 

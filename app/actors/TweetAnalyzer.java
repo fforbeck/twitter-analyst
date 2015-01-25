@@ -7,27 +7,23 @@ import akka.event.LoggingAdapter;
 import models.Tweet;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+import org.json.simple.parser.JSONParser;
 import play.Configuration;
 import play.Play;
-import play.api.libs.ws.WS;
-import play.libs.F;
-import play.mvc.Http;
-import twitter4j.Status;
+import redis.clients.jedis.Jedis;
 
 import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Created by fforbeck on 24/01/15.
  */
-public class TweetAnalyser extends UntypedActor {
+public class TweetAnalyzer extends UntypedActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
@@ -45,63 +41,69 @@ public class TweetAnalyser extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof Read) {
-            List<Status> status = read((Read) message);
-            analyseSentimentFrom(status);
+            List<JSONObject> tweets = read((Read) message);
+            analyseSentimentFrom(tweets);
         } else {
             unhandled(message);
         }
     }
 
-    private List<Status> read(Read msg) {
+    private List<JSONObject> read(Read msg) {
+        String tweetStr = null;
         log.info("Reading tweet from queue for tag " + msg.getHashTag());
+        Jedis jedis = null;
+        try {
+            jedis = new Jedis(Play.application().configuration().getString("redis.host"));
+            tweetStr = jedis.rpop("tweets-queue");
+            if (tweetStr == null) {
+                log.warning("Empty tweet found for tag " + msg.getHashTag());
+                return null;
+            }
 
+            return Arrays.asList((JSONObject) new JSONParser().parse(tweetStr));
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            if (jedis != null)
+                jedis.close();
+        }
         return null;
     }
 
-    private void analyseSentimentFrom(List<Status> statusList) {
+    private void analyseSentimentFrom(List<JSONObject> tweetsList) {
         log.info("Analysing sentiments from tweets");
-        List<Status> statuses = new ArrayList<Status>();
-        statuses.addAll(statusList);
-        Stream<Tweet> tweets = statuses.parallelStream().map(new Function<Status, Tweet>() {
-            @Override
-            public Tweet apply(Status status) {
-                return executeSentimentAnalysis(status);
-            }
-        });
 
-        tweets.parallel().forEach(new Consumer<Tweet>() {
-            @Override
-            public void accept(Tweet tweet) {
-                log.info("new tweet -> " + tweet);
-            }
-        });
+        for (JSONObject tweetJson : tweetsList) {
+            Tweet tweet = executeSentimentAnalysis(tweetJson);
+            log.info("new tweet -> " + tweet);
+        }
 
+        log.info("Sentiment analysis from tweets");
     }
 
-    public Tweet executeSentimentAnalysis(Status status) {
+    public Tweet executeSentimentAnalysis(JSONObject tweet) {
         try {
             String query = Play.application().configuration().getString("idol.analyze.sentiment.uri");
             query = query
-                    .replaceAll("%TWEET%", URLEncoder.encode(status.getText(), "UTF-8"))
+                    .replaceAll("%TWEET%", URLEncoder.encode((String) tweet.get("text"), "UTF-8"))
                     .replaceAll("%API_KEY%", apiKey);
 
             String result = callApi(query);
             JSONObject obj = (JSONObject) JSONValue.parse(result);
 
-            return buildTweet(status, (JSONObject) obj.get("aggregate"));
+            return buildTweet(tweet, (JSONObject) obj.get("aggregate"));
         } catch(Exception ex) {
             ex.printStackTrace();
             return null;
         }
     }
 
-    private Tweet buildTweet(Status status, JSONObject aggregate) {
+    private Tweet buildTweet(JSONObject tweetJson, JSONObject aggregate) {
         Tweet tweet = new Tweet();
-        tweet.id = status.getId();
-        tweet.user_id = status.getUser().getId();
-        tweet.text = status.getText();
-        tweet.hash_tag = status.getHashtagEntities()[0].getText();
-        tweet.created_at = status.getCreatedAt();
+        tweet.user_id = (Long) tweetJson.get("user_id");
+        tweet.text = (String) tweetJson.get("text");
+        tweet.hash_tag = (String) tweetJson.get("hash_tag");
+        tweet.created_at = (Date) tweetJson.get("created_at");
         tweet.sentiment = (String) aggregate.get("sentiment");
         tweet.sentiment_score = (Double) aggregate.get("score");
         return tweet;
