@@ -11,22 +11,26 @@ public class Tweet {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long id;
-    public String user_id;
-    public String data;
-    public String tag;
-    public Double sentiment;
+    public Long user_id;
+    public String user_name;
+    public String text;
+    public String hash_tag;
+    public String sentiment;
+    public Double sentiment_score;
     @Temporal(TemporalType.DATE)
-    public Date created_on;
+    public Date created_at;
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("id", id)
-                .add("userId", user_id)
-                .add("data", data)
-                .add("tag", tag)
+                .add("user_id", user_id)
+                .add("user_name", user_name)
+                .add("text", text)
+                .add("hash_tag", hash_tag)
                 .add("sentiment", sentiment)
-                .add("createdOn", created_on)
+                .add("sentiment_score", sentiment_score)
+                .add("created_at", created_at)
                 .toString();
     }
 }

@@ -1,10 +1,12 @@
 CREATE TABLE public.tweet (
-  id        NUMERIC(9,0) NOT NULL PRIMARY KEY,
-  user_id    VARCHAR(100),
-  data      VARCHAR(255),
-  tag       VARCHAR(100),
-  sentiment NUMERIC,
-  created_on  DATE
+  id                NUMERIC(9,0) NOT NULL PRIMARY KEY,
+  user_id           NUMERIC(9,0) NOT NULL UNIQUE,
+  user_name         VARCHAR(100),
+  text              VARCHAR(144),
+  hash_tag          VARCHAR(100),
+  sentiment         VARCHAR(100),
+  sentiment_score   VARCHAR(100),
+  created_at        DATE
 );
 
 CREATE SEQUENCE public.hibernate_sequence

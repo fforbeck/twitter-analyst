@@ -4,6 +4,7 @@ import actors.messages.Read;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import models.Tweet;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import play.Configuration;
@@ -17,7 +18,11 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * Created by fforbeck on 24/01/15.
@@ -40,8 +45,8 @@ public class TweetAnalyser extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof Read) {
-            List<Status> tweets = read((Read) message);
-            analyseSentimentFrom(tweets);
+            List<Status> status = read((Read) message);
+            analyseSentimentFrom(status);
         } else {
             unhandled(message);
         }
@@ -53,28 +58,53 @@ public class TweetAnalyser extends UntypedActor {
         return null;
     }
 
-    private void analyseSentimentFrom(List<Status> tweets) {
+    private void analyseSentimentFrom(List<Status> statusList) {
         log.info("Analysing sentiments from tweets");
+        List<Status> statuses = new ArrayList<Status>();
+        statuses.addAll(statusList);
+        Stream<Tweet> tweets = statuses.parallelStream().map(new Function<Status, Tweet>() {
+            @Override
+            public Tweet apply(Status status) {
+                return executeSentimentAnalysis(status);
+            }
+        });
+
+        tweets.parallel().forEach(new Consumer<Tweet>() {
+            @Override
+            public void accept(Tweet tweet) {
+                log.info("new tweet -> " + tweet);
+            }
+        });
 
     }
 
-    public String executeSentimentAnalysis(String tweet) {
+    public Tweet executeSentimentAnalysis(Status status) {
         try {
             String query = Play.application().configuration().getString("idol.analyze.sentiment.uri");
             query = query
-                    .replaceAll("%TWEET%", URLEncoder.encode(tweet, "UTF-8"))
+                    .replaceAll("%TWEET%", URLEncoder.encode(status.getText(), "UTF-8"))
                     .replaceAll("%API_KEY%", apiKey);
 
             String result = callApi(query);
-
             JSONObject obj = (JSONObject) JSONValue.parse(result);
-            JSONObject aggregate = (JSONObject) obj.get("aggregate");
-            String sentiment = (String) aggregate.get("sentiment");
-            return sentiment + ", value: " + aggregate.get("score");
+
+            return buildTweet(status, (JSONObject) obj.get("aggregate"));
         } catch(Exception ex) {
             ex.printStackTrace();
             return null;
         }
+    }
+
+    private Tweet buildTweet(Status status, JSONObject aggregate) {
+        Tweet tweet = new Tweet();
+        tweet.id = status.getId();
+        tweet.user_id = status.getUser().getId();
+        tweet.text = status.getText();
+        tweet.hash_tag = status.getHashtagEntities()[0].getText();
+        tweet.created_at = status.getCreatedAt();
+        tweet.sentiment = (String) aggregate.get("sentiment");
+        tweet.sentiment_score = (Double) aggregate.get("score");
+        return tweet;
     }
 
     private String callApi(String query) {

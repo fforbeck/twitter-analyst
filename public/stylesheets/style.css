@@ -1,0 +1,117 @@
+body {
+	font-family: "Helvetica Neue", Helvetica, sans-serif;
+	width: 1140px;
+	margin: 0 auto;
+	font-size: 14px;
+	background-color: #eee;
+	line-height: 115%;
+}
+a {
+	color: black;
+}
+
+#chart {
+	position: relative;
+}
+#title {
+	position: absolute;
+	top: 20px;
+	left: 20px;
+	font-size: 30px;
+	font-weight: 100;
+}
+svg {
+	margin-top: 65px;
+	margin-bottom: 100px;
+	z-index: -100;
+}
+#about {
+	width: 550px;
+	top: 13px;
+	margin-bottom: 100px;
+	color: #666;
+	line-height: 17px;
+	position: absolute;
+	right: 80px;
+	text-align: right;
+	font-size: 12px;
+}
+#about div {
+	margin-bottom: 5px;
+}
+#social {
+	position: absolute;
+	top: 60px;
+	left: 20px;
+}
+
+/* Points */
+.points path {
+	opacity: 0;
+}
+
+.points circle {
+	pointer-events: none;
+}
+
+.points circle.hover {
+	stroke: black;
+}
+
+
+/* Highlighter */
+circle.highlighter {
+	fill: none;
+	opacity: 0;
+	stroke: black;
+	stroke-width: 2px;
+	pointer-events: none;
+}
+
+
+/* Month line */
+.month.line path {
+	fill: none;
+	stroke: black;
+	opacity: 0.4;
+	stroke-width: 1px;
+}
+
+
+/* Tooltip */
+g.tooltip {
+	pointer-events: none;
+	opacity: 0;
+}
+g.tooltip path {
+	fill: #aaa;
+}
+g.tooltip .content text {
+	text-anchor: middle;
+	fill: black;
+}
+g.tooltip text.title {
+	font-weight: bold;
+}
+g.tooltip text.temp {
+	font-size: 16px;
+}
+
+
+/* Axes */
+.axis text {
+	font-size: 10px;
+}
+.axis path {
+	display: none;
+}
+.axis line {
+	stroke: #ccc;
+}
+.y.axis line {
+	stroke-dasharray: 1,1;
+}
+.y.axis text {
+	text-anchor: end !important;
+}
+

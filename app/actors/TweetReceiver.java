@@ -1,11 +1,15 @@
 package actors;
 
+import actors.messages.Read;
 import actors.messages.Start;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import play.Configuration;
 import play.Play;
+import redis.clients.jedis.Jedis;
 import twitter4j.*;
 import twitter4j.auth.AccessToken;
 
@@ -65,6 +69,10 @@ public class TweetReceiver extends UntypedActor {
                 log.info(" { @" + status.getUser().getScreenName() +
                                 " - " + status.getText(),
                         " - Date " + status.getCreatedAt() + " }");
+
+                Jedis jedis = new Jedis(Play.application().configuration().getString("redis.host"));
+                System.out.println("Connection to server sucessfully");
+                System.out.println("Server is running: "+jedis.ping());
             }
 
             @Override
