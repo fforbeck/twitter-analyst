@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import play.mvc.Controller;
 import play.mvc.Result;
 import repositories.TweetRepository;
-import services.TwitterHarvestService;
+import services.TwitterAnalysisService;
 
 import java.util.Date;
 
@@ -15,33 +15,15 @@ import java.util.Date;
 public class Application extends Controller {
 
     @Autowired
-    private TweetRepository tweetRepository;
+    private TwitterAnalysisService twitterAnalysisService;
 
-    @Autowired
-    private TwitterHarvestService twitterHarvestService;
-
-    public Application() {
-    }
-
-    public Application(final TweetRepository tweetRepository) {
-        this.tweetRepository = tweetRepository;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
     public Result index() {
 
-        final Tweet tweet = new Tweet();
-        tweet.user_id = "homer";
-        tweet.data = "I really like this beer!! :)";
-        tweet.tag = "duffysBeer";
-        tweet.created_on = new Date();
-        tweet.sentiment = 2.0;
+        Iterable<Tweet> allTweets = twitterAnalysisService.findAllTweets();
 
-        final Tweet savedTweet = tweetRepository.save(tweet);
 
-        final Tweet retrievedTweet  = tweetRepository.findOne(savedTweet.id);
-
-        return  ok(views.html.index.render("Found one tweet: " + retrievedTweet));
+        return  ok(views.html.index.render("Found one tweet: " + allTweets)).as("json");
     }
     
 }

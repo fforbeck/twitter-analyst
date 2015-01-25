@@ -31,8 +31,9 @@ public class TweetHarvester extends UntypedActor {
         }
     }
 
-    private void connect() throws TwitterException {
+    private void connect() throws Exception {
         if (twitter != null && twitter.getAuthorization().isEnabled()) {
+            log.warning("Already connected to twitter.");
             return;
         }
         Configuration configuration = Play.application().configuration();
@@ -41,14 +42,18 @@ public class TweetHarvester extends UntypedActor {
         AccessToken accessToken = new AccessToken(configuration.getString("twitter.oauth.accessToken"),
                 configuration.getString("twitter.oauth.accessTokenSecret"));
 
-        twitter.setOAuthConsumer(configuration.getString("twitter.oauth.consumerKey"),
-                configuration.getString("twitter.oauth.consumerSecret"));
+        try {
+            twitter.setOAuthConsumer(configuration.getString("twitter.oauth.consumerKey"),
+                    configuration.getString("twitter.oauth.consumerSecret"));
 
-        twitter.setOAuthAccessToken(accessToken);
+            twitter.setOAuthAccessToken(accessToken);
+        } catch (IllegalStateException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void harvest(String hashTag) throws TwitterException {
-        Query query = new Query(hashTag);
+        Query query = new Query(hashTag.replaceAll(",", " OR "));
         QueryResult result;
         do {
             result = twitter.search(query);
@@ -57,8 +62,8 @@ public class TweetHarvester extends UntypedActor {
                 log.info("No tweets found.");
                 break;
             }
-            log.info("Found " + tweets.size() + " tweets.");
-            //printTweets(tweets);
+            log.info("Found " + tweets.size() + " tweets for " + hashTag);
+            printTweets(tweets);
             //start.setTweets(tweets);
             //put it into rabbit mq
             sender().tell(new Read(hashTag), self());
@@ -66,10 +71,10 @@ public class TweetHarvester extends UntypedActor {
     }
 
     private void printTweets(List<Status> tweets) {
-        for (Status tweet : tweets) {
-            log.info("@" + tweet.getUser().getScreenName() +
-                    " - " + tweet.getText(),
-                    " - Date " + tweet.getCreatedAt().toString());
+        for (Status status : tweets) {
+            log.info(" { @" + status.getUser().getScreenName() +
+                    " - " + status.getText(),
+                    " - Date " + status.getCreatedAt() + " }");
         }
     }
 

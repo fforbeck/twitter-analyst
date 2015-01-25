@@ -27,19 +27,19 @@ public class TweetReceiver extends UntypedActor {
         }
     }
 
-    private Void start(Start objStart) {
+    private void start(Start objStart) {
         Start start = objStart;
         if (twitterStream == null || !twitterStream.getAuthorization().isEnabled()) {
             authenticate();
         }
-
         twitterStream.addListener(buildListener());
 
-        // filter() method internally creates a thread which manipulates TwitterStream
-        // and calls these adequate listener methods continuously.
-        twitterStream.filter(new FilterQuery().track(new String[] {start.getHashTag()}));
+        FilterQuery filterQuery = new FilterQuery()
+        .track(start.getHashTag().split(","));
 
-        return null;
+        // internally creates a thread which manipulates TwitterStream
+        // and calls these adequate listener methods continuously.
+        twitterStream.filter(filterQuery);
     }
 
     private void authenticate() {
@@ -48,17 +48,23 @@ public class TweetReceiver extends UntypedActor {
         AccessToken accessToken = new AccessToken(configuration.getString("twitter.oauth.accessToken"),
                 configuration.getString("twitter.oauth.accessTokenSecret"));
 
-        twitterStream.setOAuthConsumer(configuration.getString("twitter.oauth.consumerKey"),
-                configuration.getString("twitter.oauth.consumerSecret"));
+        try {
+            twitterStream.setOAuthConsumer(configuration.getString("twitter.oauth.consumerKey"),
+                    configuration.getString("twitter.oauth.consumerSecret"));
 
-        twitterStream.setOAuthAccessToken(accessToken);
+            twitterStream.setOAuthAccessToken(accessToken);
+        } catch (IllegalStateException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private StatusListener buildListener() {
         return new StatusListener() {
             @Override
             public void onStatus(Status status) {
-                log.info("@" + status.getUser().getScreenName() + " - " + status.getText());
+                log.info(" { @" + status.getUser().getScreenName() +
+                                " - " + status.getText(),
+                        " - Date " + status.getCreatedAt() + " }");
             }
 
             @Override
