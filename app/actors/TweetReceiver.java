@@ -5,6 +5,7 @@ import actors.messages.Start;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import components.TweetConverter;
 import org.json.simple.JSONObject;
 import play.Configuration;
 import play.Play;
@@ -14,12 +15,42 @@ import twitter4j.auth.AccessToken;
 
 /**
  * Created by fforbeck on 24/01/15.
+ *
+ * Connects to the twitter API using twitter4j driver and open a stream listener to receive twitter status
+ * related to the filters: hashTag and language.
+ * Each new status is parsed to extract the relevant content and after that it is sent to the redis queue, where
+ * it will be consumed by TweetAnalyzer later. The supervisor is advised that there is a new tweet in the queue.
  */
 public class TweetReceiver extends UntypedActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
     private TwitterStream twitterStream;
+
+    private String queueName;
+    private String redisHost;
+    private String oauthAccessToken;
+    private String oauthAccessTokenSecret;
+    private String consumerKey;
+    private String consumerSecret;
+
+
+    /**
+     * Loads the properties from application.conf file before start and receive messages.
+     *
+     * @throws Exception
+     */
+    @Override
+    public void preStart() throws Exception {
+        super.preStart();
+        Configuration configuration = Play.application().configuration();
+        queueName = configuration.getString("redis.processing.queue");
+        redisHost = configuration.getString("redis.host");
+        oauthAccessToken = configuration.getString("twitter.oauth.accessToken");
+        oauthAccessTokenSecret = configuration.getString("twitter.oauth.accessTokenSecret");
+        consumerKey = configuration.getString("twitter.oauth.consumerKey");
+        consumerSecret = configuration.getString("twitter.oauth.consumerSecret");
+    }
 
     @Override
     public void onReceive(Object message) throws Exception {
@@ -30,61 +61,90 @@ public class TweetReceiver extends UntypedActor {
         }
     }
 
-    private void start(Start objStart) {
-        Start start = objStart;
+    /**
+     * Authenticates when there is no stream or authorization.
+     * Builds the stream and listener based on the message that holds the hashTag
+     * and lang to perform the filter.
+     *
+     * @param message
+     */
+    private void start(Start message) {
         if (twitterStream == null || !twitterStream.getAuthorization().isEnabled()) {
             authenticate();
         }
-        twitterStream.addListener(buildListener(start.getHashTag()));
+        twitterStream.addListener(buildListener(message));
 
         FilterQuery filterQuery = new FilterQuery()
-        .track(start.getHashTag().split(","));
+        .track(message.getHashTag().split(","))
+        .language(message.getLang().split(","));
 
         // internally creates a thread which manipulates TwitterStream
         // and calls these adequate listener methods continuously.
         twitterStream.filter(filterQuery);
     }
 
+    /**
+     * Open a stream connection with twitter api and if the access token had already been configured
+     * will catch the exception and continue with the execution.
+     */
     private void authenticate() {
-        Configuration configuration = Play.application().configuration();
+        log.info("Authenticate Tweet Receiver.");
         twitterStream = TwitterStreamFactory.getSingleton();
-        AccessToken accessToken = new AccessToken(configuration.getString("twitter.oauth.accessToken"),
-                configuration.getString("twitter.oauth.accessTokenSecret"));
-
         try {
-            twitterStream.setOAuthConsumer(configuration.getString("twitter.oauth.consumerKey"),
-                    configuration.getString("twitter.oauth.consumerSecret"));
-
+            AccessToken accessToken = new AccessToken(oauthAccessToken, oauthAccessTokenSecret);
+            twitterStream.setOAuthConsumer(consumerKey, consumerSecret);
             twitterStream.setOAuthAccessToken(accessToken);
+            log.info("Tweet Receiver authenticated with success.");
         } catch (IllegalStateException e) {
-            log.error(e.getMessage());
+            log.error("Something went wrong or Already authenticated: " + e.getMessage());
         }
     }
 
-    private StatusListener buildListener(final String hashTag) {
+    /**
+     * Defines the listener that will listen to the twitter stream API. Will be called when
+     * some status matches with our filter.
+     * @param message
+     * @return statusListener
+     */
+    private StatusListener buildListener(final Start message) {
         return new StatusListener() {
+            /**
+             * Receives an status based on the filter previously defined.
+             *
+             * @param status
+             */
             @Override
             public void onStatus(Status status) {
-                JSONObject tweet = buildTweet(status, hashTag);
+                JSONObject tweetJson = new TweetConverter().convert(status, message.getHashTag());
+                push(tweetJson);
+                tellSupervisor();
+            }
 
+            /**
+             * Open a connection with Jedis to push the message in Redis queue.
+             * @param tweetJson
+             */
+            private void push(JSONObject tweetJson) {
+                Jedis jedis = null;
                 try {
-                    Jedis jedis = new Jedis(Play.application().configuration().getString("redis.host"));
-                    jedis.lpush("tweets-queue", tweet.toString());
-                    jedis.close();
-                    getContext().system().actorFor("user/" + TweetSupervisor.class.getSimpleName()).tell(new Read(hashTag), getSelf());
+                    jedis = new Jedis(redisHost);
+                    jedis.rpush(queueName, tweetJson.toJSONString());
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
+                } finally {
+                    if (jedis != null) {
+                        jedis.close();
+                    }
                 }
             }
 
-            private JSONObject buildTweet(Status status, String hashTag) {
-                JSONObject tweet = new JSONObject();
-                tweet.put("user_id", status.getUser().getId());
-                tweet.put("user_name", status.getUser().getScreenName());
-                tweet.put("text", status.getText());
-                tweet.put("created_at", status.getCreatedAt().toString());
-                tweet.put("hash_tag", hashTag);
-                return tweet;
+            /**
+             * Advises the TweetSupervisor that there is new tweet in the queue.
+             */
+            private void tellSupervisor() {
+                getContext().system()
+                        .actorFor("user/" + TweetSupervisor.class.getSimpleName())
+                        .tell(new Read(message.getHashTag()), getSelf());
             }
 
             @Override
@@ -93,9 +153,7 @@ public class TweetReceiver extends UntypedActor {
             }
 
             @Override
-            public void onStallWarning(StallWarning warning) {
-                log.info("Got stall warning:" + warning);
-            }
+            public void onStallWarning(StallWarning warning) {}
 
             @Override
             public void onDeletionNotice(StatusDeletionNotice statusDeletionNotice) {}

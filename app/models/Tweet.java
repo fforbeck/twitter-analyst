@@ -15,6 +15,7 @@ public class Tweet {
     public String user_name;
     public String text;
     public String hash_tag;
+    public String lang;
     public String sentiment;
     public Double sentiment_score;
     @Temporal(TemporalType.DATE)
@@ -28,6 +29,7 @@ public class Tweet {
                 .add("user_name", user_name)
                 .add("text", text)
                 .add("hash_tag", hash_tag)
+                .add("lang", lang)
                 .add("sentiment", sentiment)
                 .add("sentiment_score", sentiment_score)
                 .add("created_at", created_at)

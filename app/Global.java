@@ -19,6 +19,7 @@ import javax.persistence.Persistence;
 @Configuration
 public class Global extends GlobalSettings {
 
+    public static AnnotationConfigApplicationContext applicationContext;
 
     /**
      * The name of the persistence unit we will be using.
@@ -26,17 +27,16 @@ public class Global extends GlobalSettings {
     static final String DEFAULT_PERSISTENCE_UNIT = "defaultPersistenceUnit";
 
     /**
-     * Declare the application context to be used - a Java annotation based application context requiring no XML.
-     */
-    final private AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext();
-
-    /**
      * Sync the context lifecycle with Play's.
      */
     @Override
-    public void onStart(final Application app) {
+    public void onStart(Application app) {
         super.onStart(app);
+        applicationContext = new AnnotationConfigApplicationContext();
         startJPAConfigs();
+        applicationContext.refresh();
+        // Construct the beans and call any construction lifecycle methods e.g. @PostConstruct
+        applicationContext.start();
     }
 
     /**
@@ -45,7 +45,7 @@ public class Global extends GlobalSettings {
      */
     @Override
     public <A> A getControllerInstance(Class<A> aClass) {
-        return ctx.getBean(aClass);
+        return applicationContext.getBean(aClass);
     }
 
     /**
@@ -54,7 +54,7 @@ public class Global extends GlobalSettings {
     @Override
     public void onStop(final Application app) {
         // This will call any destruction lifecycle methods and then release the beans e.g. @PreDestroy
-        ctx.close();
+        applicationContext.close();
         super.onStop(app);
     }
 
@@ -62,11 +62,8 @@ public class Global extends GlobalSettings {
      * Starts the JPA configuration and scan packages
      */
     private void startJPAConfigs() {
-        ctx.register(SpringDataJpaConfiguration.class);
-        ctx.scan("models", "controllers", "repositories", "services");
-        ctx.refresh();
-        // Construct the beans and call any construction lifecycle methods e.g. @PostConstruct
-        ctx.start();
+        applicationContext.register(SpringDataJpaConfiguration.class);
+        applicationContext.scan("models", "controllers", "repositories", "services");
     }
 
     /**
@@ -91,4 +88,5 @@ public class Global extends GlobalSettings {
             return new JpaTransactionManager();
         }
     }
+
 }

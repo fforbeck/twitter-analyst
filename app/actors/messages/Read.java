@@ -1,6 +1,8 @@
 package actors.messages;
 
 
+import com.google.common.base.Objects;
+
 /**
  * Message read indicates that consumer should read tweets from queue.
  */
@@ -15,4 +17,10 @@ public class Read {
         return hashTag;
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("hashTag", hashTag)
+                .toString();
+    }
 }

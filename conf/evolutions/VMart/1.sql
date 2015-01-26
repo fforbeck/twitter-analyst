@@ -1,11 +1,12 @@
 CREATE TABLE public.tweet (
-  id                NUMERIC(9,0) NOT NULL PRIMARY KEY,
-  user_id           NUMERIC(9,0) NOT NULL UNIQUE,
+  id                NUMERIC(15,0) NOT NULL PRIMARY KEY,
+  user_id           NUMERIC(15,0) NOT NULL UNIQUE,
   user_name         VARCHAR(100),
   text              VARCHAR(144),
-  hash_tag          VARCHAR(100),
+  hash_tag          VARCHAR(50),
+  lang              VARCHAR(25),
   sentiment         VARCHAR(100),
-  sentiment_score   VARCHAR(100),
+  sentiment_score   DECIMAL(5,5),
   created_at        DATE
 );
 

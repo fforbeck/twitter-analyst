@@ -22,40 +22,7 @@
         </nav>
 
         <div id="chart">
-            <div id="title">How people feel about #BBB?</div>
-            <svg width="1100" height="700">
-                <defs>
-                    <filter id="dropshadow" height="130%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                        <feOffset dx="2" dy="2" result="offsetblur"/>
-                        <feComponentTransfer>
-                            <feFuncA type="linear" slope="0.2"/>
-                        </feComponentTransfer>
-                        <feMerge>
-                            <feMergeNode/>
-                            <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                    </filter>
-                </defs>
-                <g class="container" transform="translate(50, 80)">
-                    <g class="x axis" transform="translate(0, 570)"></g>
-                    <g class="y axis"></g>
-                    <g class="month line">
-                        <path></path>
-                    </g>
-                    <g class="points"></g>
-                    <circle class="highlighter" r="6"></circle>
-                    <g class="tooltip" transform="translate(-1000, 0)">
-                        <g class="wrapper" transform="translate(-45, -75)">
-                            <path d="M5,0l78,0a6,6 0 0 1 6,6l0,40a6,6 0 0 1 -6,6l-22,0L45,70L50,52L6,52a6,6 0 0 1 -6,-6l0,-40a6,6 0 0 1 6,-6" filter="url(#dropshadow)"></path>
-                            <g class="content" transform="translate(45, 20)">
-                                <text class="title" translate="transform(0,3)"></text>
-                                <text class="temp" transform="translate(0,21)"></text>
-                            </g>
-                        </g>
-                    </g>
-                </g>
-            </svg>
+            <div id="title"></div>
 
         </div>
 

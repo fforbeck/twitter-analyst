@@ -16,7 +16,7 @@ import static akka.actor.SupervisorStrategy.escalate;
 import static akka.actor.SupervisorStrategy.stop;
 
 /**
- *
+ * Created by fforbeck on 24/01/15.
  */
 public final class TweetSupervisor extends UntypedActor {
 
@@ -24,7 +24,7 @@ public final class TweetSupervisor extends UntypedActor {
 
     private ActorRef tweetReceiverActor;
     private ActorRef tweetHarvesterActor;
-    private ActorRef tweetAnalyzerActor;
+    private Long tweetAnalyzerActorId = 0L;
 
     private static SupervisorStrategy strategy = new OneForOneStrategy(10,
             Duration.create("10 second"),
@@ -44,31 +44,32 @@ public final class TweetSupervisor extends UntypedActor {
     }
 
     @Override
-    public void onReceive(Object message) throws Exception {
-        if (message instanceof Start) {
-            //startSimpleTweetHarvester(((Start) message).getHashTag());
-            startRealtimeTweetReceiver(((Start) message).getHashTag());
-        } else if (message instanceof Read) {
-            startTweetAnalyzer(((Read) message).getHashTag());
+    public void onReceive(Object objMsg) throws Exception {
+        if (objMsg instanceof Start) {
+            Start message = (Start) objMsg;
+            startSimpleTweetHarvester(message.getHashTag(), message.getLang());
+            startRealtimeTweetReceiver(message.getHashTag(), message.getLang());
+
+        } else if (objMsg instanceof Read) {
+            startTweetAnalyzer(((Read) objMsg).getHashTag());
         } else {
-            unhandled(message);
+            unhandled(objMsg);
         }
     }
 
-    private void startSimpleTweetHarvester(String hashTag) {
-        log.info("Starting tweet harvester for tag " + hashTag);
+    private void startSimpleTweetHarvester(String hashTag, String lang) {
+        log.info("Starting tweet harvester for tag " + hashTag+ ", lang: " + lang);
 
         final String actorName = TweetHarvester.class.getSimpleName();
         if (tweetReceiverActor == null) {
             getContext().system().actorOf(Props.create(TweetHarvester.class), actorName);
         }
         tweetHarvesterActor = getContext().system().actorFor("user/" + actorName);
-        tweetHarvesterActor.tell(new Start(hashTag), getSender());
         getContext().system().scheduler().schedule(
                 FiniteDuration.apply(0, TimeUnit.MILLISECONDS), //Initial delay 0 milliseconds
                 FiniteDuration.apply(5, TimeUnit.MINUTES),     //Frequency 15 minutes
                 tweetHarvesterActor,
-                new Start(hashTag),
+                new Start(hashTag, lang),
                 getContext().dispatcher(),
                 getSelf()
         );
@@ -76,15 +77,15 @@ public final class TweetSupervisor extends UntypedActor {
         log.info("Tweet harvester started for tag " + hashTag);
     }
 
-    private void startRealtimeTweetReceiver(String hashTag) {
-        log.info("Starting tweet stream receiver for tag " + hashTag);
+    private void startRealtimeTweetReceiver(String hashTag, String lang) {
+        log.info("Starting tweet stream receiver for tag " + hashTag + ", lang: " + lang);
 
         final String actorName = TweetReceiver.class.getSimpleName();
         if (tweetReceiverActor == null) {
             getContext().system().actorOf(Props.create(TweetReceiver.class), actorName);
         }
         tweetReceiverActor = getContext().system().actorFor("user/" + actorName);
-        tweetReceiverActor.tell(new Start(hashTag), self());
+        tweetReceiverActor.tell(new Start(hashTag, lang), self());
 
         log.info("Tweet stream receiver started for tag " + hashTag);
     }
@@ -93,10 +94,9 @@ public final class TweetSupervisor extends UntypedActor {
         log.info("Starting tweet analyzer for " + hashTag);
 
         final String actorName = TweetAnalyzer.class.getSimpleName();
-        if (tweetAnalyzerActor == null) {
-            getContext().system().actorOf(Props.create(TweetAnalyzer.class), actorName);
-        }
-        tweetAnalyzerActor = getContext().system().actorFor("user/" + actorName);
+        ActorRef tweetAnalyzerActor = getContext().system()
+                .actorOf(Props.create(TweetAnalyzer.class), actorName + (++tweetAnalyzerActorId));
+
         tweetAnalyzerActor.tell(new Read(hashTag), self());
 
         log.info("Tweet analyzer started for tag " + hashTag);
