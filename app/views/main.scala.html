@@ -24,6 +24,7 @@
             <div id="container" style="min-width: 310px; height: 400px; max-width: 800px; margin: 0 auto"></div>
 
 
+
             <div class="page-header">
             </div>
             <div class="row">
@@ -71,16 +72,93 @@
     <script src="@routes.Assets.at("javascripts/exporting.js")" type="text/javascript"></script>
 
     <script>
+
     $(function () {
-        $('#container').highcharts({
+
+        var host = window.location.host
+        var wsUri = "ws://" + host + "@routes.Application.wsTweetsSocket()";
+        var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+        var tweetsSocket = new WS(wsUri);
+
+        tweetsSocket.onmessage = function(event) {
+            var data = JSON.parse(event.data);
+            updateChart(event.data);
+        }
+
+        // if errors on websocket
+        var onalert = function(event) {
+            console.log(event);
+        }
+
+        tweetsSocket.onerror = onalert;
+        tweetsSocket.onclose = onalert;
+
+        function updateChart(data) {
+            var point = eval("(" + data + ')');
+            var series = chart.series[0],
+            shift = series.data.length > 15;
+
+            if (point.y < 0.0) {
+            chart.series[0].addPoint(point, true, false);
+            } else if (point.y == 0.0) {
+            chart.series[1].addPoint(point, true, false);
+            } else if (point.y > 0.0) {
+            chart.series[2].addPoint(point, true, false);
+            }
+        }
+
+        var chart;
+
+        function requestTweets() {
+                $.ajax({
+                    url: "@routes.Application.tweets()",
+                    success: function(tweet) {
+                        var series = chart.series[0],
+                        shift = series.data.length > 20;
+
+                        // add the point
+                        chart.series[0].addPoint(tweet, true, shift);
+
+                        // call it again after one second
+                        setTimeout(requestTweets, 1000);
+                    },
+                    error: function(error) {
+                        if (error.status == 200) {
+                            var point = eval("(" + error.responseText + ')');
+                            var series = chart.series[0],
+                            shift = series.data.length > 15;
+
+                            if (point.y < 0.0) {
+                                chart.series[0].addPoint(point, true, shift);
+                            } else if (point.y == 0.0) {
+                                chart.series[1].addPoint(point, true, shift);
+                            } else if (point.y > 0.0) {
+                                chart.series[2].addPoint(point, true, shift);
+                            }
+                            // add the point
+
+
+                            // call it again after one second
+                            setTimeout(requestTweets, 1000);
+                        }
+                        console.log(error);
+                    },
+                    cache: false
+                });
+        }
+        chart = new Highcharts.Chart({
             chart: {
-                type: 'scatter',
-                zoomType: 'xyz'
+                renderTo: 'container',
+                defaultSeriesType: 'scatter',
+                zoomType: 'xyz',
+                events: {
+                    load: requestTweets
+                }
             },
-                title: {
+            title: {
                 text: 'Sentiment Score VS Day '
             },
-                subtitle: {
+            subtitle: {
                 text: 'Source: Twitter API & HP Idol Sentiment Analysis - last tweets in 30 days about $HPQ.'
             },
             xAxis: {
@@ -142,20 +220,30 @@
                 {
                     name: 'Negative',
                     color: 'rgba(223, 83, 83, .5)',
-                    data: [{x: 1, y:-0.5, tweet:"Yay!  Living Clojure is out for Early Release! <br> _Trying not to hyperventilate_  "}, [16, -0.9], [7, -0.2], [15, -0.1], [15, -0.6]]
+                    data: [
+                        {x: Date.UTC(2015, 0, 1, 19, 10, 10), y:-0.5, tweet:"Yay!  Living Clojure is out for Early Release!"},
+                        {x: Date.UTC(2015, 0, 30, 21, 10, 01), y:-0.67, tweet:"Yay!  Living Clojure is out for Early Release!"}
+                    ]
                 },
                 {
                     name: 'Neutral',
                     color: 'rgba(214, 209, 209, .5)',
-                    data: [[17, 0.0], [4, 0.0], [4, 0.0], [2, 0.0], [1, 0.0]]
+                    data: [
+                        {x: Date.UTC(2015, 0, 1, 8, 01, 01), y:0.0, tweet:"Yay!  Living Clojure is out for Early Release!"},
+                        {x: Date.UTC(2015, 0, 2, 7, 10, 10), y:0.0, tweet:"Yay!  Living Clojure is out for Early Release!"},
+                    ]
                 },
                 {
                     name: 'Positive',
                     color: 'rgba(60, 118, 61, .5)',
-                    data: [[3, 0.6], [17, 0.8], [19, 0.7], [18, 0.3], [31, 0.8]]
+                    data: [
+                        {x: Date.UTC(2015, 0, 1, 1, 10, 05), y:0.3, tweet:"Yay!  Living Clojure is out for Early Release!"},
+                        {x: Date.UTC(2015, 0, 2, 2, 33, 01), y:0.87, tweet:"Yay!  Living Clojure is out for Early Release!"},
+                    ]
                 }
             ]
             });
+
     });
     </script>
 

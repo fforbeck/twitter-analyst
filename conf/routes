@@ -3,15 +3,11 @@
 # ~~~~
 
 # Home page
-GET        /                       @controllers.Application.index()
-
-
-# Twitter Analyst
-# GET         /                     controllers.TwitterAnalyst.index()
-#GET        /search/:hashTag        controllers.TwitterAnalyst.search(hashTag)
-
+GET        /                    controllers.Application.index()
+GET        /tweets              controllers.Application.tweets()
+GET        /ws-tweets           controllers.Application.wsTweetsSocket()
 
 # Map static resources from the /public folder to the /assets URL path
-GET        /assets/*file           controllers.Assets.at(path="/public", file)
+GET        /assets/*file        controllers.Assets.at(path="/public", file)
 
     

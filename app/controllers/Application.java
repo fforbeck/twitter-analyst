@@ -1,15 +1,11 @@
 package controllers;
 
-import models.Tweet;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Result;
-import repositories.TweetRepository;
+import play.mvc.WebSocket;
 import services.TwitterAnalysisService;
-
-import java.util.Date;
 
 @org.springframework.stereotype.Controller
 public class Application extends Controller {
@@ -17,13 +13,40 @@ public class Application extends Controller {
     @Autowired
     private TwitterAnalysisService twitterAnalysisService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW, readOnly = true)
-    public Result index() {
-
-        Iterable<Tweet> allTweets = twitterAnalysisService.findAllTweets();
-
-
-        return  ok(views.html.index.render("Found one tweet: " + allTweets)).as("json");
+    public static Result index() {
+        return  ok(views.html.index.render("Ready."));
     }
-    
+
+    public static Result tweets() {
+        double y = Math.random() / Math.random() > 0.5 ? 10 : -10;
+        return  ok("{x: Date.UTC(2015, 1, 24), y:"+y+", tweet:\"Yay!  Living Play is out for Early Release!\"}");
+    }
+
+    public static WebSocket<String> wsTweetsSocket() {
+        return new WebSocket<String>() {
+
+            // Called when the Websocket Handshake is done.
+            public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
+
+                // For each event received on the socket,
+                in.onMessage(new F.Callback<String>() {
+                    public void invoke(String event) {
+                        System.out.println(event);
+                    }
+                });
+
+                // When the socket is closed.
+                in.onClose(new F.Callback0() {
+                    public void invoke() {
+                        System.out.println("Disconnected");
+                    }
+                });
+                // Send a single 'Hello!' message
+                double y = Math.random() / Math.random() > 0.5 ? 10 : -10;
+                out.write("{x: Date.UTC(2015, 1, 24), y:"+y+", tweet:\"Yay!  Living Play is out for Early Release!\"}");
+            }
+        };
+    }
+
+
 }
