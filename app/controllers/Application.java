@@ -1,5 +1,8 @@
 package controllers;
 
+import actors.TweetPublisher;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 import org.springframework.beans.factory.annotation.Autowired;
 import play.libs.F;
 import play.mvc.Controller;
@@ -20,6 +23,14 @@ public class Application extends Controller {
     public static Result tweets() {
         double y = Math.random() / Math.random() > 0.5 ? 10 : -10;
         return  ok("{x: Date.UTC(2015, 1, 24), y:"+y+", tweet:\"Yay!  Living Play is out for Early Release!\"}");
+    }
+
+    public static WebSocket<String> tweetsAl() {
+        return WebSocket.withActor(new F.Function<ActorRef, Props>() {
+            public Props apply(ActorRef out) throws Throwable {
+                return TweetPublisher.props(out);
+            }
+        });
     }
 
     public static WebSocket<String> wsTweetsSocket() {

@@ -13,6 +13,7 @@ import play.Configuration;
 import play.Play;
 import redis.clients.jedis.Jedis;
 import repositories.TweetRepository;
+import scala.App;
 
 import java.io.*;
 import java.net.URL;
