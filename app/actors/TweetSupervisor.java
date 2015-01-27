@@ -47,11 +47,11 @@ public final class TweetSupervisor extends UntypedActor {
     public void onReceive(Object objMsg) throws Exception {
         if (objMsg instanceof Start) {
             Start message = (Start) objMsg;
-            startSimpleTweetHarvester(message.getHashTag(), message.getLang());
-            startRealtimeTweetReceiver(message.getHashTag(), message.getLang());
+           // startSimpleTweetHarvester(message.getHashTag(), message.getLang());
+           // startRealtimeTweetReceiver(message.getHashTag(), message.getLang());
 
         } else if (objMsg instanceof Read) {
-            startTweetAnalyzer(((Read) objMsg).getHashTag());
+            // startTweetAnalyzer(((Read) objMsg).getHashTag());
         } else {
             unhandled(objMsg);
         }
