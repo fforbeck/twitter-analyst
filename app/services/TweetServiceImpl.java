@@ -27,12 +27,16 @@ import java.util.logging.Logger;
 
 /**
  * Created by fforbeck on 24/01/15.
+ *
+ * Main service to start the akka actor system and run a scheduled job in order to persist
+ * the harvested and analyzed tweets.
+ *
  */
 @Service
 @EnableScheduling
-public class TwitterAnalysisServiceImpl implements TwitterAnalysisService {
+public class TweetServiceImpl implements TweetService {
 
-    private final Logger log = Logger.getLogger(TwitterAnalysisServiceImpl.class.getSimpleName());
+    private final Logger log = Logger.getLogger(TweetServiceImpl.class.getSimpleName());
 
     @Autowired
     private TweetRepository tweetRepository;
@@ -45,6 +49,11 @@ public class TwitterAnalysisServiceImpl implements TwitterAnalysisService {
 
     private String redisHost;
 
+    /**
+     * Starts the actor system to receive and harvest the tweets using
+     * twitter4j api.
+     *
+     */
     @Async
     @Override
     @PostConstruct
@@ -84,14 +93,22 @@ public class TwitterAnalysisServiceImpl implements TwitterAnalysisService {
         );
     }
 
+    /**
+     * Find all tweets in DB
+     */
     @Override
     public Iterable<Tweet> findAllTweets() {
         return tweetRepository.findAll();
     }
 
+    @Override
+    public void searchBy(String hashTag, String lang) {
+        tweetSupervisor.tell(new Start(hashTag, lang), null);
+    }
 
     /**
-     *
+     * Scheduled job to load the tweets from redis queue to be persisted
+     * in the Vertica DB.
      */
     @Scheduled(fixedRate = 30000l)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -119,7 +136,7 @@ public class TwitterAnalysisServiceImpl implements TwitterAnalysisService {
     }
 
     /**
-     * Open a new connection with Redis to pop the tweet from the persist queue in chunks of 25 items.
+     * Open a new connection with Redis to popup the tweets from the persist queue in chunks of 25.
      *
      * @return List<String> tweetList
      */

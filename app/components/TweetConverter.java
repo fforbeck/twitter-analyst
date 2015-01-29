@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
+ * Created by fforbeck on 24/01/15.
+ *
  * Tweet converter is responsible for convert the twitter4j.Status to JSONObject to make
  * possible to extract the content as String and place in the queue. Also convert the
  * simple.JSONObject to models.Tweet in order to create the entity that will be saved in db.
@@ -28,7 +30,7 @@ public class TweetConverter {
     private static final String HASH_TAG = "hash_tag";
     private static final String SENTIMENT = "sentiment";
     private static final String SCORE = "score";
-    private static final String DD_MM_YYYY = "dd/MM/yyyy";
+    private static final String DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss";
 
     private static final Map<String, String> twitterIdolsLangMap = new HashMap<String, String>();
 
@@ -68,7 +70,7 @@ public class TweetConverter {
     }
 
     private String getDate(Status status) {
-        return new SimpleDateFormat(DD_MM_YYYY).format(status.getCreatedAt());
+        return new SimpleDateFormat(DD_MM_YYYY_HH_MM_SS).format(status.getCreatedAt());
     }
 
     /**
@@ -104,7 +106,7 @@ public class TweetConverter {
 
     private Date getDate(JSONObject tweetJson) {
         try {
-            return new SimpleDateFormat(DD_MM_YYYY).parse((String) tweetJson.get(CREATED_AT));
+            return new SimpleDateFormat(DD_MM_YYYY_HH_MM_SS).parse((String) tweetJson.get(CREATED_AT));
         } catch (ParseException e) {
             log.severe(e.getMessage() + ", invalid date: " + tweetJson.get(CREATED_AT));
             return new Date();

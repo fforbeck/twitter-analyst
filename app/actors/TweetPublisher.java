@@ -5,16 +5,27 @@ import akka.actor.Props;
 import akka.actor.UntypedActor;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import play.Configuration;
 import play.Play;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPubSub;
 
+/**
+ * Created by fforbeck on 24/01/15.
+ *
+ * This actor is responsible for creating store the actor reference called "out" which
+ * is used to communicate with the client.
+ * When this actor receives a String message "pump" it will subscribe a redis channel "live-tweets-channel"
+ * in order to send to the client live tweets updates.
+ * The redis channel is populated by the TweetReceiver Actor.
+ */
 public class TweetPublisher extends UntypedActor {
 
     private final LoggingAdapter log = Logging.getLogger(context().system(), this);
 
     private String redisHost;
-    private String redisChannelName;
+    private String tweetsChannel;
+    private boolean stopPublisher;
  
     public static Props props(ActorRef out) {
         return Props.create(TweetPublisher.class, out);
@@ -26,92 +37,73 @@ public class TweetPublisher extends UntypedActor {
         this.out = out;
     }
 
+    /**
+     * Loads the properties from application.conf file before start and receive messages.
+     *
+     * @throws Exception
+     */
     @Override
     public void preStart() {
-        redisHost = Play.application().configuration().getString("redis.host");
-        redisChannelName = "live-tweets-channel";
-        setupPublisher();
+        Configuration configuration = Play.application().configuration();
+        redisHost = configuration.getString("redis.host");
+        tweetsChannel = configuration.getString("redis.tweets.channel");
+    }
+
+    /**
+     * Unsubscribe the tweets channel after finishes the actor execution.
+     *
+     * @throws Exception
+     */
+    @Override
+    public void postStop() throws Exception {
+        jedisPubSub.unsubscribe(tweetsChannel);
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
-        if (message instanceof String) {
-            out.tell("I received your message: " + message, self());
+        if (message instanceof String && "pump".equalsIgnoreCase((String)message)) {
+            out.tell("Alright Dude, I got your message: " + message, self());
             Jedis jedis = new Jedis(redisHost);
-            jedis.subscribe(jedisPubSub, redisChannelName);
-            jedis.quit();
+            // listening for msgs
+            jedis.subscribe(jedisPubSub, tweetsChannel);
+        } else {
+            unhandled(message);
         }
     }
 
-    public static class RegistrationMessage {
-        public RegistrationMessage() {
-        }
-    }
-
-    public static class UnregistrationMessage {
-        public String id;
-
-        public UnregistrationMessage(String id) {
-            super();
-            this.id = id;
-        }
-    }
-
+    /**
+     * Creates a redis pubSub object which is responsible for listening all the messages
+     * that are sent to the channel.
+     */
     private final JedisPubSub jedisPubSub = new JedisPubSub() {
-        @Override
-        public void onUnsubscribe(String channel, int subscribedChannels) {
-            log.info("onUnsubscribe");
-        }
 
-        @Override
-        public void onSubscribe(String channel, int subscribedChannels) {
-            log.info("onSubscribe");
-        }
-
-        @Override
-        public void onPUnsubscribe(String pattern, int subscribedChannels) {
-        }
-
-        @Override
-        public void onPSubscribe(String pattern, int subscribedChannels) {
-        }
-
-        @Override
-        public void onPMessage(String pattern, String channel, String message) {
-        }
-
+        /**
+         * For each new message that comes from the channel we sent it to
+         * the client directly. It is a tweet in json format.
+         * @param channel
+         * @param message
+         */
         @Override
         public void onMessage(String channel, String message) {
             log.info("New tweet received");
             out.tell(message, self());
         }
-    };
 
-    private void setupPublisher() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    while(true) {
-                        System.out.println("Connecting");
-                        Jedis jedis = new Jedis(redisHost);
-                        System.out.println("Waiting to publish");
-                        System.out.println("Ready to publish, waiting one sec");
-                        Thread.sleep(1000);
-                        System.out.println("publishing");
-                        double y = Math.random() * (Math.random() > 0.5 ? 10 : -10);
-                        long x = System.currentTimeMillis();
-                        jedis.publish(redisChannelName, "{x: " + x + ", y:" + y + ", tweet:\"Yay!  Living Play is out for Early Release!\"}");
-                        System.out.println("published, closing publishing connection");
-                        jedis.quit();
-                        System.out.println("publishing connection closed");
-                    }
-                } catch (Exception e) {
-                    System.out.println(">>> OH NOES Pub, " + e.getMessage());
-// e.printStackTrace();
-                }
-            }
-        }, "publisherThread").start();
-    }
+        @Override
+        public void onUnsubscribe(String channel, int subscribedChannels) {}
+
+        @Override
+        public void onSubscribe(String channel, int subscribedChannels) {}
+
+        @Override
+        public void onPUnsubscribe(String pattern, int subscribedChannels) {}
+
+        @Override
+        public void onPSubscribe(String pattern, int subscribedChannels) {}
+
+        @Override
+        public void onPMessage(String pattern, String channel, String message) { }
+
+    };
 
 }

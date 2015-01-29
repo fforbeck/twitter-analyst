@@ -8,56 +8,33 @@ import play.libs.F;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.WebSocket;
-import services.TwitterAnalysisService;
+import services.TweetService;
 
+/**
+ * Created by fforbeck on 24/01/15.
+ *
+ */
 @org.springframework.stereotype.Controller
 public class Application extends Controller {
 
     @Autowired
-    private TwitterAnalysisService twitterAnalysisService;
+    private TweetService tweetService;
 
     public static Result index() {
         return  ok(views.html.index.render("Ready."));
     }
 
-    public static Result tweets() {
-        double y = Math.random() / Math.random() > 0.5 ? 10 : -10;
-        return  ok("{x: Date.UTC(2015, 1, 24), y:"+y+", tweet:\"Yay!  Living Play is out for Early Release!\"}");
+    public Result searchBy(String hashTag, String lang) {
+        tweetService.searchBy(hashTag, lang);
+        return ok("I got! tks");
     }
 
-    public static WebSocket<String> tweetsAl() {
+    public static WebSocket<String> wsTweets() {
         return WebSocket.withActor(new F.Function<ActorRef, Props>() {
             public Props apply(ActorRef out) throws Throwable {
                 return TweetPublisher.props(out);
             }
         });
     }
-
-    public static WebSocket<String> wsTweetsSocket() {
-        return new WebSocket<String>() {
-
-            // Called when the Websocket Handshake is done.
-            public void onReady(WebSocket.In<String> in, WebSocket.Out<String> out) {
-
-                // For each event received on the socket,
-                in.onMessage(new F.Callback<String>() {
-                    public void invoke(String event) {
-                        System.out.println(event);
-                    }
-                });
-
-                // When the socket is closed.
-                in.onClose(new F.Callback0() {
-                    public void invoke() {
-                        System.out.println("Disconnected");
-                    }
-                });
-                // Send a single 'Hello!' message
-                double y = Math.random() / Math.random() > 0.5 ? 10 : -10;
-                out.write("{x: Date.UTC(2015, 1, 24), y:"+y+", tweet:\"Yay!  Living Play is out for Early Release!\"}");
-            }
-        };
-    }
-
 
 }

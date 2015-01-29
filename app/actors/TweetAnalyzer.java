@@ -13,7 +13,6 @@ import play.Configuration;
 import play.Play;
 import redis.clients.jedis.Jedis;
 import repositories.TweetRepository;
-import scala.App;
 
 import java.io.*;
 import java.net.URL;
@@ -23,8 +22,11 @@ import java.nio.charset.Charset;
 /**
  * Created by fforbeck on 24/01/15.
  *
- * Read tweets from redis queue and call the HP IDOL api to do the sentiment analysis on tweet content.
- * The result ...
+ * Read tweets from redis queue and call the HP IDOL api to do the sentiment analysis on tweet.
+ * Each tweet is returned with a score and it`s saved and put in a redis queue to be persisted later in the
+ * Vertica DB by the TweetServiceImpl scheduled job. Beside that, the same tweet is published in
+ * a redis channel in order to send it to all subscribers of this channel. In this case, web-clients using
+ * socket connections to update the real-time tweet analysis chart.
  *
  */
 public class TweetAnalyzer extends UntypedActor {
@@ -33,6 +35,7 @@ public class TweetAnalyzer extends UntypedActor {
 
     private String processingQueue;
     private String persistQueue;
+    private String tweetsChannel;
     private String redisHost;
     private String sentimentRequestQuery;
 
@@ -49,6 +52,7 @@ public class TweetAnalyzer extends UntypedActor {
         Configuration configuration = Play.application().configuration();
         processingQueue = configuration.getString("redis.processing.queue");
         persistQueue = configuration.getString("redis.persist.queue");
+        tweetsChannel = configuration.getString("redis.tweets.channel");
         redisHost = configuration.getString("redis.host");
         sentimentRequestQuery = configuration.getString("hp.idol.analyze.sentiment.uri");
     }
@@ -58,7 +62,8 @@ public class TweetAnalyzer extends UntypedActor {
         if (objMessage instanceof Read) {
             JSONObject tweetJson = read((Read) objMessage);
             tweetJson = executeSentimentAnalysis(tweetJson);
-            enqueueToPersist(tweetJson);
+            sendToPersistQueue(tweetJson);
+            sendToLiveTweetsChannel(tweetJson);
         } else {
             unhandled(objMessage);
         }
@@ -169,7 +174,12 @@ public class TweetAnalyzer extends UntypedActor {
         return sb.toString();
     }
 
-    private void enqueueToPersist(JSONObject tweetJson) {
+    /**
+     * Sends the tweet to redis queue to be picked up later for another job and
+     * save it in the DB.
+     * @param tweetJson
+     */
+    private void sendToPersistQueue(JSONObject tweetJson) {
         if (tweetJson == null) {
             return;
         }
@@ -177,6 +187,28 @@ public class TweetAnalyzer extends UntypedActor {
         try {
             jedis = new Jedis(redisHost);
             jedis.rpush(persistQueue, tweetJson.toJSONString());
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+        } finally {
+            if (jedis != null)
+                jedis.close();
+        }
+    }
+
+    /**
+     * Sends the tweet to redis channel to be published to all subscribers
+     * of this channel. In this case they are web-clients.
+     *
+     * @param tweetJson
+     */
+    private void sendToLiveTweetsChannel(JSONObject tweetJson) {
+        if (tweetJson == null) {
+            return;
+        }
+        Jedis jedis = null;
+        try {
+            jedis = new Jedis(redisHost);
+            jedis.publish(tweetsChannel, tweetJson.toJSONString());
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         } finally {

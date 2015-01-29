@@ -3,10 +3,8 @@
 # ~~~~
 
 # Home page
-GET        /                    controllers.Application.index()
-GET        /tweets              controllers.Application.tweets()
-GET        /ws-tweets           controllers.Application.wsTweetsSocket()
-GET        /tweets-all           controllers.Application.tweetsAl()
+GET        /                        controllers.Application.index()
+GET        /tweets-all              controllers.Application.wsTweets()
 
 # Map static resources from the /public folder to the /assets URL path
 GET        /assets/*file        controllers.Assets.at(path="/public", file)

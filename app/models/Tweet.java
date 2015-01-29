@@ -6,6 +6,11 @@ import com.google.common.base.Objects;
 import javax.persistence.*;
 import java.util.Date;
 
+/**
+ * Created by fforbeck on 24/01/15.
+ *
+ *
+ */
 @Entity
 public class Tweet {
     @Id
@@ -18,7 +23,7 @@ public class Tweet {
     public String lang;
     public String sentiment;
     public Double sentiment_score;
-    @Temporal(TemporalType.DATE)
+    @Temporal(TemporalType.TIMESTAMP)
     public Date created_at;
 
     @Override

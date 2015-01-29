@@ -53,187 +53,57 @@
         </div>
     </body>
 
-    @*animation: Highcharts.svg,
-    events: {
-    load: function () {
-    // set up the updating of the chart each second
-    var series = this.series[0];
-    setInterval(function () {
-    var x = (Math.random(30) + 1),
-    y = ((Math.random(9) + 1) / (Math.random(10) >= 5 ? -10 : 10));
-    series.addPoint([x, y], true, true);
-    }, 1000);
-    }
-    },*@
-
     <script src="@routes.Assets.at("javascripts/jquery-1.11.1.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/bootstrap.min.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/highcharts.js")" type="text/javascript"></script>
     <script src="@routes.Assets.at("javascripts/exporting.js")" type="text/javascript"></script>
 
     <script>
-
-    $(function () {
-
-
-        @*function requestTweets() {*@
-                @*$.ajax({*@
-                    @*url: "@routes.Application.tweets()",*@
-                    @*success: function(tweet) {*@
-                        @*var series = chart.series[0],*@
-                        @*shift = series.data.length > 20;*@
-
-                        @*// add the point*@
-                        @*chart.series[0].addPoint(tweet, true, shift);*@
-
-                        @*// call it again after one second*@
-                        @*setTimeout(requestTweets, 1000);*@
-                    @*},*@
-                    @*error: function(error) {*@
-                        @*if (error.status == 200) {*@
-                            @*var point = eval("(" + error.responseText + ')');*@
-                            @*var series = chart.series[0],*@
-                            @*shift = series.data.length > 15;*@
-
-                            @*if (point.y < 0.0) {*@
-                                @*chart.series[0].addPoint(point, true, shift);*@
-                            @*} else if (point.y == 0.0) {*@
-                                @*chart.series[1].addPoint(point, true, shift);*@
-                            @*} else if (point.y > 0.0) {*@
-                                @*chart.series[2].addPoint(point, true, shift);*@
-                            @*}*@
-                            @*// add the point*@
-
-
-                            @*// call it again after one second*@
-                            @*setTimeout(requestTweets, 1000);*@
-                        @*}*@
-                        @*console.log(error);*@
-                    @*},*@
-                    @*cache: false*@
-                @*});*@
-        @*}*@
-
         var chart;
-        chart = new Highcharts.Chart({
-            chart: {
-                renderTo: 'container',
-                defaultSeriesType: 'scatter',
-                zoomType: 'xyz'
 
-            },
-            title: {
-                text: 'Sentiment Score VS Day '
-            },
-            subtitle: {
-                text: 'Source: Twitter API & HP Idol Sentiment Analysis - last tweets in 30 days about $HPQ.'
-            },
-            xAxis: {
-                type: 'datetime',
-                title: {
-                    enabled: true,
-                    text: 'Day'
-                },
-                showLastLabel: true
-            },
-            yAxis: {
-                title: {
-                    enabled: true,
-                    text: 'Sentiment Score (%)'
-                }
-            },
-            zAxis: {
-                title: {
-                   enabled: true,
-                   text: 'Tweet'
-                }
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'left',
-                verticalAlign: 'top',
-                x: 100,
-                y: 70,
-                z: 11,
-                floating: true,
-                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
-                borderWidth: 1
-            },
-            plotOptions: {
-                scatter: {
-                    marker: {
-                        radius: 5,
-                        states: {
-                            hover: {
-                                enabled: true,
-                                lineColor: 'rgb(100,100,100)'
-                            }
-                        }
-                    },
-                    states: {
-                        hover: {
-                            marker: {
-                                enabled: false
-                            }
-                        }
-                    },
-                    tooltip: {
-                        headerFormat: '<b>{series.name}</b><br>',
-                        pointFormat: 'Scored {point.y} at {point.x} <br> {point.tweet} <br>'
-                    }
-                }
-            },
-            series: [
-                {
-                    name: 'Negative',
-                    color: 'rgba(223, 83, 83, .5)',
-                    data: [
-                    ]
-                },
-                {
-                    name: 'Neutral',
-                    color: 'rgba(214, 209, 209, .5)',
-                    data: [
-                    ]
-                },
-                {
-                    name: 'Positive',
-                    color: 'rgba(60, 118, 61, .5)',
-                    data: [
-                    ]
-                }
-            ]
-            });
+        function updateChart(data) {
+            var tweetJson = eval("(" + data + ')');
 
-            var host = window.location.host
-            var wsUri = "ws://" + host + "@routes.Application.tweetsAl()";
-            var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket
+            var point = new Object();
+            point.y = tweetJson.score;
+            point.x = Date.parse(tweetJson.created_at);
+            point.tweet = tweetJson.text;
+            point.user = tweetJson.user_name;
+            var pointJson = JSON.stringify(point);
+
+            if (tweetJson.sentiment == "negative") {
+                chart.series[0].addPoint(point, true, chart.series[0].activePointCount > 0);
+            } else if (tweetJson.sentiment == "neutral") {
+                chart.series[1].addPoint(point, true, chart.series[1].activePointCount > 0);
+            } else if (tweetJson.sentiment == "positive") {
+                chart.series[2].addPoint(point, true, chart.series[2].activePointCount > 0);
+            }
+        }
+    </script>
+
+    <script src="@routes.Assets.at("javascripts/live-tweets-chart.js")" type="text/javascript"></script>
+
+    <script>
+        $(function() {
+            var host = window.location.host;
+            var wsUri = "ws://" + host + "@routes.Application.wsTweets()";
+            var WS = window['MozWebSocket'] ? MozWebSocket : WebSocket;
             var tweetsSocket = new WS(wsUri);
 
+            tweetsSocket.onopen = function() {
+                tweetsSocket.send("pump");
+            };
             tweetsSocket.onmessage = function(event) {
-            //var data = JSON.parse(event.data);
-            updateChart(event.data);
-            }
-            // if errors on websocket
-            var onalert = function(event) {
-            console.log(event);
-            }
-
-            tweetsSocket.onerror = onalert;
-            tweetsSocket.onclose = onalert;
-            tweetsSocket.send("oi");
-
-            function updateChart(data) {
-            var point = eval("(" + data + ')');
-            if (point.y < 0.0) {
-            chart.series[0].addPoint(point, true, false);
-            } else if (point.y == 0.0) {
-            chart.series[1].addPoint(point, true, false);
-            } else if (point.y > 0.0) {
-            chart.series[2].addPoint(point, true, false);
-            }
-            }
-
+                updateChart(event.data);
+            };
+            tweetsSocket.onerror = function(event) {
+                console.log(event);
+                tweetsSocket.close();
+            };
+            tweetsSocket.onclose = function(event) {
+                console.log(event);
+                tweetsSocket.close();
+            };
     });
     </script>
 
