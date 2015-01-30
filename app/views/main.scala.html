@@ -111,9 +111,7 @@
         });
 
     $(function () {
-    var seriesCounter = 0,
-        names = ['Positive', 'Negative'],
-        createChart = function () {
+        var createChart = function () {
             $('#container2').highcharts('StockChart', {
                     rangeSelector: {
                     selected: 4
@@ -154,20 +152,24 @@
             });
         };
 
-        $.each(names, function (i, name) {
-            var url =  @routes.Application.tweets("name");
+        var names = ['Positive', 'Negative'];
+        var seriesCounter = 0;
+
+        names.forEach(function(name) {
+            var url =  @routes.Application.tweets("") + name;
             var tweetsBySentimentURL = "//" + host + url;
             $.getJSON(tweetsBySentimentURL,
-                function (data) {
-                    seriesOptions[i] = {
-                        name: name,
-                        data: data
-                    };
-                    seriesCounter += 1;
+                    function (data) {
+                        seriesOptions[i] = {
+                            name: name,
+                            data: data
+                        };
+                        seriesCounter += 1;
                     if (seriesCounter === names.length) {
                         createChart();
                     }
-                });
+                }
+            );
         });
     });
     </script>
