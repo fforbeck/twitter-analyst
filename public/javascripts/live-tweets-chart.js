@@ -6,16 +6,16 @@ $(function () {
             zoomType: 'xyz'
         },
         title: {
-            text: 'Sentiment Score VS Day '
+            text: 'Sentiment Score VS Date Time '
         },
         subtitle: {
-            text: 'Source: Twitter API & HP Idol Sentiment Analysis - last tweets in 30 days about $HPQ.'
+            text: 'Source: Twitter API & HP Idol Sentiment Analysis - live tweets about $HPQ.'
         },
         xAxis: {
             type: 'datetime',
             title: {
                 enabled: true,
-                text: 'Day'
+                text: 'Date Time'
             },
             showLastLabel: true
         },

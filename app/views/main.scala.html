@@ -69,6 +69,7 @@
             var tweetJson = eval("(" + data + ')');
 
             var point = new Object();
+            //todo parse to 2 dec and parse date to show tooltip
             point.y = tweetJson.score;
             point.x = tweetJson.created_at;
             point.tweet = tweetJson.text;
@@ -110,8 +111,11 @@
         });
 
     $(function () {
-        staticChart = $('#container2');
-        staticChart.highcharts('StockChart', {
+        staticChart = new Highcharts.Chart({
+                chart: {
+                    renderTo: 'container2',
+                    defaultSeriesType: 'StockChart'
+                },
                 rangeSelector: {
                     selected: 4
                 },
@@ -159,7 +163,6 @@
                     function (data) {
 
                         data.forEach(function(tweetJson) {
-
                             var point = new Object();
                             point.y = tweetJson.sentiment_score;
                             point.x = tweetJson.created_at;
