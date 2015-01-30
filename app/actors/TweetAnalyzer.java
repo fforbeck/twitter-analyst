@@ -77,7 +77,7 @@ public class TweetAnalyzer extends UntypedActor {
      * @return tweetJson
      * @throws ParseException
      */
-    private JSONObject read(Read msg) throws ParseException {
+    private JSONObject read(Read msg) {
         log.info("Reading tweet from queue for tag " + msg.getHashTag());
 
         String tweetStr = popTweet();
@@ -85,7 +85,12 @@ public class TweetAnalyzer extends UntypedActor {
             log.warning("Empty tweet found for tag " + msg.getHashTag());
             return null;
         }
-        return (JSONObject) new JSONParser().parse(tweetStr);
+        try {
+            return (JSONObject) new JSONParser().parse(tweetStr);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
     }
 
     /**

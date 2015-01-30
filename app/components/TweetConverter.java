@@ -66,7 +66,7 @@ public class TweetConverter {
         tweet.put(USER_NAME, status.getUser().getScreenName());
         tweet.put(TEXT, status.getText());
         tweet.put(LANG, getLang(status.getLang()));
-        tweet.put(CREATED_AT, status.getCreatedAt());
+        tweet.put(CREATED_AT, status.getCreatedAt().getTime());
         tweet.put(HASH_TAG, hashTag);
         tweet.put(RETWEETS, status.getRetweetCount());
         if (status.getGeoLocation() != null) {
@@ -101,7 +101,7 @@ public class TweetConverter {
         tweet.text = (String) tweetJson.get(TEXT);
         tweet.hash_tag = (String) tweetJson.get(HASH_TAG);
         tweet.lang = (String) tweetJson.get(LANG);
-        tweet.created_at = getDate((String)tweetJson.get(CREATED_AT));
+        tweet.created_at = new Date((Long) tweetJson.get(CREATED_AT));
         tweet.sentiment = (String) tweetJson.get(SENTIMENT);
         tweet.sentiment_score = getDouble(tweetJson.get(SCORE));
         tweet.lat = getDouble(tweetJson.get(LAT));

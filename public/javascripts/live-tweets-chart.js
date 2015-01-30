@@ -1,5 +1,5 @@
 $(function () {
-    chart = new Highcharts.Chart({
+    liveChart = new Highcharts.Chart({
         chart: {
             renderTo: 'container',
             defaultSeriesType: 'scatter',
