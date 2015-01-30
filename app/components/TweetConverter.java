@@ -30,7 +30,9 @@ public class TweetConverter {
     private static final String HASH_TAG = "hash_tag";
     private static final String SENTIMENT = "sentiment";
     private static final String SCORE = "score";
-    private static final String DD_MM_YYYY_HH_MM_SS = "dd/MM/yyyy HH:mm:ss";
+    private static final String LAT = "lat";
+    private static final String LON = "lon";
+    private static final String RETWEETS = "retweets";
 
     private static final Map<String, String> twitterIdolsLangMap = new HashMap<String, String>();
 
@@ -64,13 +66,14 @@ public class TweetConverter {
         tweet.put(USER_NAME, status.getUser().getScreenName());
         tweet.put(TEXT, status.getText());
         tweet.put(LANG, getLang(status.getLang()));
-        tweet.put(CREATED_AT, getDate(status));
+        tweet.put(CREATED_AT, status.getCreatedAt());
         tweet.put(HASH_TAG, hashTag);
+        tweet.put(RETWEETS, status.getRetweetCount());
+        if (status.getGeoLocation() != null) {
+            tweet.put(LAT, status.getGeoLocation().getLatitude());
+            tweet.put(LON, status.getGeoLocation().getLongitude());
+        }
         return tweet;
-    }
-
-    private String getDate(Status status) {
-        return new SimpleDateFormat(DD_MM_YYYY_HH_MM_SS).format(status.getCreatedAt());
     }
 
     /**
@@ -98,18 +101,20 @@ public class TweetConverter {
         tweet.text = (String) tweetJson.get(TEXT);
         tweet.hash_tag = (String) tweetJson.get(HASH_TAG);
         tweet.lang = (String) tweetJson.get(LANG);
-        tweet.created_at = getDate(tweetJson);
+        tweet.created_at = getDate((String)tweetJson.get(CREATED_AT));
         tweet.sentiment = (String) tweetJson.get(SENTIMENT);
         tweet.sentiment_score = getDouble(tweetJson.get(SCORE));
+        tweet.lat = getDouble(tweetJson.get(LAT));
+        tweet.lon = getDouble(tweetJson.get(LON));
+        tweet.retweets = (Long) tweetJson.get(RETWEETS);
         return tweet;
     }
 
-    private Date getDate(JSONObject tweetJson) {
+    private Date getDate(String dateStr) {
         try {
-            return new SimpleDateFormat(DD_MM_YYYY_HH_MM_SS).parse((String) tweetJson.get(CREATED_AT));
+            return new SimpleDateFormat().parse(dateStr);
         } catch (ParseException e) {
-            log.severe(e.getMessage() + ", invalid date: " + tweetJson.get(CREATED_AT));
-            return new Date();
+           return new Date();
         }
     }
 
@@ -123,6 +128,13 @@ public class TweetConverter {
             return new Double((Long)obj);
 
         return (Double) obj;
+    }
+
+    private Long getLong(Object obj) {
+        if (obj instanceof Integer)
+            return new Long((Integer)obj);
+
+        return (Long) obj;
     }
 
 }

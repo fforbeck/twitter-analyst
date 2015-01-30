@@ -2,12 +2,16 @@ CREATE TABLE public.tweet (
   id                NUMERIC(15,0) NOT NULL PRIMARY KEY,
   user_id           NUMERIC(15,0) NOT NULL UNIQUE,
   user_name         VARCHAR(100),
-  text              VARCHAR(144),
+  text              VARCHAR(256),
   hash_tag          VARCHAR(50),
   lang              VARCHAR(25),
   sentiment         VARCHAR(100),
   sentiment_score   DECIMAL(5,5),
-  created_at        DATE
+  created_at        TIMESTAMP,
+  lat               DECIMAL(5,5),
+  lon               DECIMAL(5,5),
+  retweets          NUMERIC(15,0)
+
 );
 
 CREATE SEQUENCE public.hibernate_sequence

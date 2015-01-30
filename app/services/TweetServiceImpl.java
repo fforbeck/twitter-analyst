@@ -21,6 +21,7 @@ import repositories.TweetRepository;
 import scala.concurrent.duration.FiniteDuration;
 
 import javax.annotation.PostConstruct;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -34,7 +35,7 @@ import java.util.logging.Logger;
  */
 @Service
 @EnableScheduling
-public class TweetServiceImpl implements TweetService {
+public class TweetServiceImpl implements TweetService  {
 
     private final Logger log = Logger.getLogger(TweetServiceImpl.class.getSimpleName());
 
@@ -93,17 +94,32 @@ public class TweetServiceImpl implements TweetService {
         );
     }
 
+    @Override
+    public void startHarvestingBy(String hashTag, String lang) {
+        tweetSupervisor.tell(new Start(hashTag, lang), null);
+    }
+
     /**
      * Find all tweets in DB
      */
     @Override
-    public Iterable<Tweet> findAllTweets() {
+    public Iterable<Tweet> findAll() {
         return tweetRepository.findAll();
     }
 
+    /**
+     * Find all tweets in DB filtering by sentiment
+     */
     @Override
-    public void searchBy(String hashTag, String lang) {
-        tweetSupervisor.tell(new Start(hashTag, lang), null);
+    public List<Tweet> findBy(String sentiment) {
+        if ("positive".equals(sentiment)
+                || "negative".equals(sentiment)
+                || "neutral".equals(sentiment)) {
+
+            return tweetRepository.findBySentiment(sentiment);
+        }
+
+        return Collections.emptyList();
     }
 
     /**

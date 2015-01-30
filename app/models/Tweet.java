@@ -25,6 +25,9 @@ public class Tweet {
     public Double sentiment_score;
     @Temporal(TemporalType.TIMESTAMP)
     public Date created_at;
+    public Double lat;
+    public Double lon;
+    public Long retweets;
 
     @Override
     public String toString() {
@@ -38,6 +41,9 @@ public class Tweet {
                 .add("sentiment", sentiment)
                 .add("sentiment_score", sentiment_score)
                 .add("created_at", created_at)
+                .add("lat", lat)
+                .add("lon", lon)
+                .add("retweets", retweets)
                 .toString();
     }
 }
