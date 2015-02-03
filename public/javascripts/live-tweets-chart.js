@@ -20,15 +20,14 @@ $(function () {
             showLastLabel: true
         },
         yAxis: {
+            labels: {
+                formatter: function () {
+                    return (this.value > 0 ? ' + ' : '') + (this.value * 100).toFixed(0) + '%';
+                }
+            },
             title: {
                 enabled: true,
                 text: 'Sentiment Score (%)'
-            }
-        },
-        zAxis: {
-            title: {
-                enabled: true,
-                text: 'Tweet'
             }
         },
         legend: {
@@ -37,7 +36,6 @@ $(function () {
             verticalAlign: 'top',
             x: 100,
             y: 70,
-            z: 11,
             floating: true,
             backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF',
             borderWidth: 1
@@ -49,7 +47,8 @@ $(function () {
                     states: {
                         hover: {
                             enabled: true,
-                            lineColor: 'rgb(100,100,100)'
+                            lineColor: 'rgb(100,100,100)',
+                            hideDelay: 3500
                         }
                     }
                 },
@@ -62,7 +61,9 @@ $(function () {
                 },
                 tooltip: {
                     headerFormat: '<b>{series.name}</b><br>',
-                    pointFormat: 'Scored {point.y} at {point.x} <br> {point.tweet} <br>'
+                    pointFormat: 'Scored {point.y} at {point.x} <br> {point.tweet} <br>',
+                    valueDecimals: 2,
+                    xDateFormat: '%Y-%m-%d %H-%m-%s'
                 }
             }
         },
