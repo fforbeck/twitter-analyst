@@ -8,8 +8,8 @@ CREATE TABLE public.tweet (
   sentiment         VARCHAR(100),
   sentiment_score   DECIMAL(5,5),
   created_at        TIMESTAMP,
-  lat               DECIMAL(5,5),
-  lon               DECIMAL(5,5),
+  lat               DECIMAL(8,8),
+  lon               DECIMAL(8,8),
   retweets          NUMERIC(15,0)
 
 );

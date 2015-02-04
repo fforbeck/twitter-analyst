@@ -16,6 +16,6 @@ public interface TweetService {
 
     Iterable<Tweet> findAll();
 
-    List<Tweet> findBy(String sentiment);
+    List<Tweet> findBySentiment(String sentiment);
 
 }

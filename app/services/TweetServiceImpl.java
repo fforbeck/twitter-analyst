@@ -111,12 +111,12 @@ public class TweetServiceImpl implements TweetService  {
      * Find all tweets in DB filtering by sentiment
      */
     @Override
-    public List<Tweet> findBy(String sentiment) {
-        if ("positive".equals(sentiment)
-                || "negative".equals(sentiment)
-                || "neutral".equals(sentiment)) {
+    public List<Tweet> findBySentiment(String sentiment) {
+        if ("positive".equalsIgnoreCase(sentiment)
+                || "negative".equalsIgnoreCase(sentiment)
+                || "neutral".equalsIgnoreCase(sentiment)) {
 
-            return tweetRepository.findBySentiment(sentiment);
+            return tweetRepository.findBySentiment(sentiment.toLowerCase());
         }
 
         return Collections.emptyList();

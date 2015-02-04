@@ -16,7 +16,7 @@ $(function () {
             $('#container').highcharts('StockChart', {
 
                 rangeSelector: {
-                    selected: 4
+                    selected: 4,
                 },
                 title: {
                     text: 'Sentiment Score VS Date Time '
@@ -38,9 +38,8 @@ $(function () {
                 },
 
                 plotOptions: {
-                    series: {
-                        compare: 'percent'
-                    }
+                    connectNulls: true,
+                    stacking: 'normal'
                 },
 
                 tooltip: {

@@ -5,6 +5,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import twitter4j.Status;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -124,10 +126,17 @@ public class TweetConverter {
     }
 
     private Double getDouble(Object obj) {
-        if (obj instanceof Long)
-            return new Double((Long)obj);
+        if (obj == null)
+            return 0.0;
 
-        return (Double) obj;
+        Double score = null;
+        if (obj instanceof Long)
+            score = new Double((Long)obj);
+        else
+            score = (Double) obj;
+
+        BigDecimal bd = new BigDecimal(score).setScale(4, RoundingMode.HALF_EVEN);
+        return bd.doubleValue();
     }
 
     private Long getLong(Object obj) {

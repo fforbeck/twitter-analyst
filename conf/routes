@@ -3,10 +3,12 @@
 # ~~~~
 
 # Home page
-GET        /                            controllers.Application.liveTweets()
-GET        /timeline                    controllers.Application.timelineTweets()
-GET        /ws-tweets                   controllers.Application.wsTweets()
-GET        /tweets/:sentiment           @controllers.Application.tweets(sentiment: String)
+GET        /                         controllers.Application.liveTweets()
+GET        /timeline                 controllers.Application.timelineTweets()
+GET        /pie                      controllers.Application.pieTweets()
+GET        /ws-tweets                controllers.Application.wsTweets()
+GET        /tweets/:sentiment        @controllers.Application.tweets(sentiment: String)
+GET        /statistics               @controllers.Application.statistics()
 
 # Map static resources from the /public folder to the /assets URL path
 GET        /assets/*file             controllers.Assets.at(path="/public", file)
