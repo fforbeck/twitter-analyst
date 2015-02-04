@@ -32,12 +32,11 @@ public class Application extends Controller {
         return  ok(views.html.live_tweets.render("Live Tweets Analyst Ready!"));
     }
 
-    public static Result timelineTweets() {
-        return  ok(views.html.timeline_tweets.render("Timeline Tweets Ready!"));
-    }
-
     public static Result pieTweets() {
         return  ok(views.html.pie_tweets.render("Pie Tweets Ready!"));
+    }
+    public static Result timelineTweets() {
+        return  ok(views.html.timeline_tweets.render("Timeline Tweets Ready!"));
     }
 
     /**
