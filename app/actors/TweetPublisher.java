@@ -26,7 +26,11 @@ public class TweetPublisher extends UntypedActor {
     private String redisHost;
     private String tweetsChannel;
     private boolean stopPublisher;
- 
+
+    /**
+     *  Static factory method with receives an 'out' instance that represents the websocket connection
+     *  with the client.
+     */
     public static Props props(ActorRef out) {
         return Props.create(TweetPublisher.class, out);
     }
@@ -59,10 +63,18 @@ public class TweetPublisher extends UntypedActor {
         jedisPubSub.unsubscribe(tweetsChannel);
     }
 
+    /**
+     * Each received message equals 'pump' we subscribe a redis channel
+     * to listen to new tweets messages and publish them in the websocket connection.
+     * We use one single instance of this actor for each websocker connection.
+     *
+     * @param message
+     * @throws Exception
+     */
     @Override
     public void onReceive(Object message) throws Exception {
         if (message instanceof String && "pump".equalsIgnoreCase((String)message)) {
-            out.tell("Alright Dude, I got your message: " + message, self());
+            // out.tell("Alright Dude, I got your message: " + message, self());
             Jedis jedis = new Jedis(redisHost);
             // listening for msgs
             jedis.subscribe(jedisPubSub, tweetsChannel);

@@ -7,6 +7,8 @@ import akka.actor.SupervisorStrategy.Directive;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import akka.japi.Function;
+import play.Configuration;
+import play.Play;
 import scala.concurrent.duration.Duration;
 import scala.concurrent.duration.FiniteDuration;
 
@@ -30,6 +32,21 @@ public final class TweetSupervisor extends UntypedActor {
     private ActorRef tweetHarvesterActor;
     private Long tweetAnalyzerActorId = 0L;
 
+    private final boolean harvesterOn;
+    private final boolean receiverOn;
+
+    /**
+     * Load application conf to start or not the actors to
+     * harvest or receive tweets.
+     */
+    public TweetSupervisor() {
+        Configuration configuration = Play.application().configuration();
+        this.harvesterOn = configuration.getBoolean("tweet.harvester.on");
+        this.receiverOn = configuration.getBoolean("tweet.receiver.on");
+        log.info("---> ActorRef: tweet.harvester.on: " + harvesterOn);
+        log.info("---> ActorRef: tweet.receiver.on: " + receiverOn);
+    }
+
     /**
      * Define the failure strategy, in this case is OneForOne it means that
      * if one actor fails only it will be restarted, not the full actor system.
@@ -51,13 +68,25 @@ public final class TweetSupervisor extends UntypedActor {
         return strategy;
     }
 
+    /**
+     * If message is Start, it will check if the actor are configured to run,
+     * if so, then they will be started.
+     * If message is Read, then tweet analyzer actor will be started to
+     * load tweets from queue and sent it to HPIdol analysis.
+     *
+     * @param objMsg
+     * @throws Exception
+     */
     @Override
     public void onReceive(Object objMsg) throws Exception {
         if (objMsg instanceof Start) {
             Start message = (Start) objMsg;
-           //startSimpleTweetHarvester(message.getHashTag(), message.getLang());
-           startRealtimeTweetReceiver(message.getHashTag(), message.getLang());
-
+            if (harvesterOn) {
+                startSimpleTweetHarvester(message.getHashTag(), message.getLang());
+            }
+            if (receiverOn) {
+                startRealtimeTweetReceiver(message.getHashTag(), message.getLang());
+            }
         } else if (objMsg instanceof Read) {
             startTweetAnalyzer(((Read) objMsg).getHashTag());
         } else {

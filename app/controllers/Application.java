@@ -19,7 +19,8 @@ import services.TweetService;
 /**
  * Created by fforbeck on 24/01/15.
  *
- * Main controller
+ * Main controller which receives the HTTP requests, handle and return a Result.
+ * That can be a simple html page, a WebSocket connection or JSON response.
  *
  */
 @org.springframework.stereotype.Controller
@@ -28,13 +29,23 @@ public class Application extends Controller {
     @Autowired
     private TweetService tweetService;
 
+    /**
+     * @return live_tweets.scala.html
+     */
     public static Result liveTweets() {
         return  ok(views.html.live_tweets.render("Live Tweets Analyst Ready!"));
     }
 
+    /**
+     * @return pie_tweets.scala.html
+     */
     public static Result pieTweets() {
         return  ok(views.html.pie_tweets.render("Pie Tweets Ready!"));
     }
+
+    /**
+     * @return timeline_tweets.scala.html
+     */
     public static Result timelineTweets() {
         return  ok(views.html.timeline_tweets.render("Timeline Tweets Ready!"));
     }
@@ -79,6 +90,11 @@ public class Application extends Controller {
         return ok(Json.toJson(tweets));
     }
 
+    /**
+     * Builds the percentage of tweets that are negative, positive and neutral.
+     *
+     * @return Tweets statistics
+     */
     @Transactional(readOnly = true)
     public Result statistics() {
         long total = 0l;
@@ -86,6 +102,7 @@ public class Application extends Controller {
         long neutral = 0l;
         long positives = 0l;
 
+        //TODO move it to be done in service and count during the query
         for (Tweet tweet : tweetService.findAll()) {
             total++;
             if ("negative".equals(tweet.sentiment)) {
@@ -96,33 +113,46 @@ public class Application extends Controller {
                 positives++;
             }
         }
-
-        JSONArray statistics = new JSONArray();
-
         total = Math.max(total, 1l);
+        return ok(Json.toJson(buildStatistics(total, negatives, neutral, positives)));
+    }
 
+    private JSONArray buildStatistics(long total, long negatives, long neutral, long positives) {
+        JSONArray statistics = new JSONArray();
+        statistics.add(buildPositiveStats(total, positives));
+        statistics.add(buildNegativeStats(total, negatives));
+        statistics.add(buildNeutralStats(total, neutral));
+        return statistics;
+    }
+
+    private JSONObject buildPositiveStats(long total, long positives) {
         JSONObject positiveJson = new JSONObject();
         positiveJson.put("name", "Positive");
         positiveJson.put("y", positives * 100.0/total);
         positiveJson.put("sliced", true);
         positiveJson.put("selected", true);
-        statistics.add(positiveJson);
+        positiveJson.put("count", positives);
+        return positiveJson;
+    }
 
+    private JSONObject buildNegativeStats(long total, long negatives) {
         JSONObject negativeJson = new JSONObject();
         negativeJson.put("name", "Negative");
         negativeJson.put("y", negatives * 100.0/total);
         negativeJson.put("sliced", false);
         negativeJson.put("selected", false);
-        statistics.add(negativeJson);
+        negativeJson.put("count", negatives);
+        return negativeJson;
+    }
 
+    private JSONObject buildNeutralStats(long total, long neutral) {
         JSONObject neutralJson = new JSONObject();
         neutralJson.put("name", "Neutral");
         neutralJson.put("y", neutral * 100.0/total);
         neutralJson.put("sliced", false);
         neutralJson.put("selected", false);
-        statistics.add(neutralJson);
-
-        return ok(Json.toJson(statistics));
+        neutralJson.put("count", neutral);
+        return neutralJson;
     }
 
 }

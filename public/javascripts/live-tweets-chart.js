@@ -61,26 +61,26 @@ $(function () {
                 },
                 tooltip: {
                     headerFormat: '<b>{series.name}</b><br>',
-                    pointFormat: 'Scored {point.y} at {point.x} <br> {point.tweet} <br>',
+                    pointFormat: 'Scored <b>{point.y}</b> <br> {point.user} <br> {point.tweet} <br>',
                     valueDecimals: 2,
-                    xDateFormat: '%Y-%m-%d %H-%m-%s'
+                    xDateFormat: '%Y-%m-%d %HH-%mm-%ss'
                 }
             }
         },
         series: [
             {
                 name: 'Negative',
-                color: 'rgba(223, 83, 83, .5)',
+                color: 'rgba(223, 83, 83, .7)',
                 data: []
             },
             {
                 name: 'Neutral',
-                color: 'rgba(214, 209, 209, .5)',
+                color: 'rgba(214, 209, 209, .9)',
                 data: []
             },
             {
                 name: 'Positive',
-                color: 'rgba(60, 118, 61, .5)',
+                color: 'rgba(60, 118, 61, .7)',
                 data: []
             }
         ]

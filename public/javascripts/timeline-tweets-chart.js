@@ -37,9 +37,9 @@ $(function () {
         var tweetsBySentimentURL = "//" + window.location.host + "/tweets/" + name.toLowerCase();
 
         $.getJSON(tweetsBySentimentURL, function (data) {
-            var color = 'rgba(60, 118, 61, .5)';
+            var color = 'rgba(60, 118, 61, .7)';
             if (name === 'Negative') {
-                color = 'rgba(223, 83, 83, .5)';
+                color = 'rgba(223, 83, 83, .7)';
             }
             seriesOptions[i] = {
                 name: name,
@@ -48,7 +48,7 @@ $(function () {
                 lineWidth : 0,
                 marker : {
                     enabled : true,
-                    radius : 2
+                    radius : 4
                 },
                 tooltip: {
                     valueDecimals: 2
