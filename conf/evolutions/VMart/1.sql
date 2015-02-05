@@ -20,3 +20,6 @@ CREATE SEQUENCE public.hibernate_sequence
   MAXVALUE 9223372036854775807
   START 3333
   CACHE 1;
+
+
+SELECT COUNT(*) from public.tweet;

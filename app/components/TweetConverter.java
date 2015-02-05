@@ -98,14 +98,14 @@ public class TweetConverter {
         }
 
         Tweet tweet = new Tweet();
-        tweet.user_id = (Long) tweetJson.get(USER_ID);
-        tweet.user_name = (String) tweetJson.get(USER_NAME);
+        tweet.userId = (Long) tweetJson.get(USER_ID);
+        tweet.userName = (String) tweetJson.get(USER_NAME);
         tweet.text = (String) tweetJson.get(TEXT);
-        tweet.hash_tag = (String) tweetJson.get(HASH_TAG);
+        tweet.hashTag = (String) tweetJson.get(HASH_TAG);
         tweet.lang = (String) tweetJson.get(LANG);
-        tweet.created_at = new Date((Long) tweetJson.get(CREATED_AT));
+        tweet.createdAt = new Date((Long) tweetJson.get(CREATED_AT));
         tweet.sentiment = (String) tweetJson.get(SENTIMENT);
-        tweet.sentiment_score = getDouble(tweetJson.get(SCORE));
+        tweet.sentimentScore = getDouble(tweetJson.get(SCORE));
         tweet.lat = getDouble(tweetJson.get(LAT));
         tweet.lon = getDouble(tweetJson.get(LON));
         tweet.retweets = (Long) tweetJson.get(RETWEETS);

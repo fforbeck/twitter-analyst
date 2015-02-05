@@ -9,22 +9,26 @@ import java.util.Date;
 /**
  * Created by fforbeck on 24/01/15.
  *
- *
  */
 @Entity
 public class Tweet {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     public Long id;
-    public Long user_id;
-    public String user_name;
+    @Column(name = "user_id")
+    public Long userId;
+    @Column(name = "user_name")
+    public String userName;
     public String text;
-    public String hash_tag;
+    @Column(name = "hash_tag")
+    public String hashTag;
     public String lang;
     public String sentiment;
-    public Double sentiment_score;
+    @Column(name = "sentiment_score")
+    public Double sentimentScore;
     @Temporal(TemporalType.TIMESTAMP)
-    public Date created_at;
+    @Column(name = "created_at")
+    public Date createdAt;
     public Double lat;
     public Double lon;
     public Long retweets;
@@ -33,14 +37,14 @@ public class Tweet {
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("id", id)
-                .add("user_id", user_id)
-                .add("user_name", user_name)
+                .add("user_id", userId)
+                .add("user_name", userName)
                 .add("text", text)
-                .add("hash_tag", hash_tag)
+                .add("hash_tag", hashTag)
                 .add("lang", lang)
                 .add("sentiment", sentiment)
-                .add("sentiment_score", sentiment_score)
-                .add("created_at", created_at)
+                .add("sentiment_score", sentimentScore)
+                .add("created_at", createdAt)
                 .add("lat", lat)
                 .add("lon", lon)
                 .add("retweets", retweets)

@@ -1,6 +1,6 @@
 @(message: String)
 
-@main("Welcome to Twitter Analyst") {
+@main("Welcome to Twitter Analyst - Live Tweets") {
 
         <script src="@routes.Assets.at("javascripts/highcharts.js")" type="text/javascript"></script>
         <script src="@routes.Assets.at("javascripts/exporting.js")" type="text/javascript"></script>
@@ -41,6 +41,7 @@
                     tweetsSocket.send("pump");
                 };
                 tweetsSocket.onmessage = function(event) {
+                    console.log(event);
                     updateLiveChart(event.data);
                 };
                 tweetsSocket.onerror = function(event) {

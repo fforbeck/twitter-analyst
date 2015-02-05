@@ -70,10 +70,10 @@ public class Application extends Controller {
         JSONArray tweets = new JSONArray();
         for (Tweet tweet : tweetService.findBySentiment(sentiment)) {
             JSONObject tweetJson = new JSONObject();
-            tweetJson.put("x", tweet.created_at.getTime());
-            tweetJson.put("y", tweet.sentiment_score);
+            tweetJson.put("x", tweet.createdAt.getTime());
+            tweetJson.put("y", tweet.sentimentScore);
             tweetJson.put("tweet", tweet.text);
-            tweetJson.put("user", tweet.user_name);
+            tweetJson.put("user", tweet.userName);
             tweets.add(tweetJson);
         }
         return ok(Json.toJson(tweets));
@@ -125,17 +125,4 @@ public class Application extends Controller {
         return ok(Json.toJson(statistics));
     }
 
-    /**
-     * Start a new search in twitter API filtering by
-     * hashTag and lang. The result of this search will
-     * be archived in DB.
-     *
-     * @param hashTag
-     * @param lang
-     * @return Status 200 (ok msg)
-     */
-    public Result searchBy(String hashTag, String lang) {
-        tweetService.startHarvestingBy(hashTag, lang);
-        return ok("I got! tks");
-    }
 }

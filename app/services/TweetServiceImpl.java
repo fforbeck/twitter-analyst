@@ -8,6 +8,7 @@ import akka.actor.Props;
 import components.TweetConverter;
 import models.Tweet;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -116,7 +117,8 @@ public class TweetServiceImpl implements TweetService  {
                 || "negative".equalsIgnoreCase(sentiment)
                 || "neutral".equalsIgnoreCase(sentiment)) {
 
-            return tweetRepository.findBySentiment(sentiment.toLowerCase());
+            return tweetRepository.findBySentiment(sentiment.toLowerCase(),
+                    new Sort(Sort.Direction.ASC, "createdAt"));
         }
 
         return Collections.emptyList();
