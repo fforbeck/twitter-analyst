@@ -27,7 +27,7 @@ public class TweetReceiver extends UntypedActor {
 
     private TwitterStream twitterStream;
 
-    private String queueName;
+    private String processingQueue;
     private String redisHost;
     private String oauthAccessToken;
     private String oauthAccessTokenSecret;
@@ -44,7 +44,7 @@ public class TweetReceiver extends UntypedActor {
     public void preStart() throws Exception {
         super.preStart();
         Configuration configuration = Play.application().configuration();
-        queueName = configuration.getString("redis.processing.queue");
+        processingQueue = configuration.getString("redis.processing.queue");
         redisHost = configuration.getString("redis.host");
         oauthAccessToken = configuration.getString("twitter.oauth.accessToken");
         oauthAccessTokenSecret = configuration.getString("twitter.oauth.accessTokenSecret");
@@ -128,7 +128,7 @@ public class TweetReceiver extends UntypedActor {
                 Jedis jedis = null;
                 try {
                     jedis = new Jedis(redisHost);
-                    jedis.rpush(queueName, tweetJson.toJSONString());
+                    jedis.rpush(processingQueue, tweetJson.toJSONString());
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
                 } finally {
