@@ -2,8 +2,12 @@
 
 ![Tweet Analyst System](/documents/tweetanalystsystem.png)
 
-
 ---
+
+### Design Notes
+
+[Tweet Sentiment Analyst System](http://felipeforbeck.com/posts/2015/01/tweet-sentiment-analyst/)
+
 
 ### Installing on Ubuntu 13.10
 
