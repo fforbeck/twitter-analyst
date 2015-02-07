@@ -32,8 +32,6 @@ public class TweetConverter {
     private static final String HASH_TAG = "hash_tag";
     private static final String SENTIMENT = "sentiment";
     private static final String SCORE = "score";
-    private static final String LAT = "lat";
-    private static final String LON = "lon";
     private static final String RETWEETS = "retweets";
 
     private static final Map<String, String> twitterIdolsLangMap = new HashMap<String, String>();
@@ -71,10 +69,6 @@ public class TweetConverter {
         tweet.put(CREATED_AT, status.getCreatedAt().getTime());
         tweet.put(HASH_TAG, hashTag);
         tweet.put(RETWEETS, status.getRetweetCount());
-        if (status.getGeoLocation() != null) {
-            tweet.put(LAT, status.getGeoLocation().getLatitude());
-            tweet.put(LON, status.getGeoLocation().getLongitude());
-        }
         return tweet;
     }
 
@@ -106,8 +100,6 @@ public class TweetConverter {
         tweet.createdAt = new Date((Long) tweetJson.get(CREATED_AT));
         tweet.sentiment = (String) tweetJson.get(SENTIMENT);
         tweet.sentimentScore = getDouble(tweetJson.get(SCORE));
-        tweet.lat = getDouble(tweetJson.get(LAT));
-        tweet.lon = getDouble(tweetJson.get(LON));
         tweet.retweets = (Long) tweetJson.get(RETWEETS);
         return tweet;
     }

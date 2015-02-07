@@ -127,6 +127,7 @@ public class TweetReceiver extends UntypedActor {
             private void push(JSONObject tweetJson) {
                 Jedis jedis = null;
                 try {
+                    tweetJson.put("harvested", false);
                     jedis = new Jedis(redisHost);
                     jedis.rpush(processingQueue, tweetJson.toJSONString());
                 } catch (Exception e) {

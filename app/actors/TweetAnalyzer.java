@@ -189,6 +189,7 @@ public class TweetAnalyzer extends UntypedActor {
         if (tweetJson == null) {
             return;
         }
+        log.info("Sending tweet to persistent queue");
         Jedis jedis = null;
         try {
             jedis = new Jedis(redisHost);
@@ -211,6 +212,15 @@ public class TweetAnalyzer extends UntypedActor {
         if (tweetJson == null) {
             return;
         }
+
+        Boolean harvested = (Boolean) tweetJson.get("harvested");
+        if (harvested == null || harvested) {
+            // it does not comes from stream api
+            // so we dont send to live channel.
+            return;
+        }
+
+        log.info("Publishing tweet to live tweets channel");
         Jedis jedis = null;
         try {
             jedis = new Jedis(redisHost);

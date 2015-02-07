@@ -1,3 +1,10 @@
+CREATE SEQUENCE public.hibernate_sequence
+  INCREMENT BY 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 3333
+  CACHE 1;
+
 CREATE TABLE public.tweet (
   id                NUMERIC(15,0) NOT NULL PRIMARY KEY,
   user_id           NUMERIC(15,0) NOT NULL UNIQUE,
@@ -8,18 +15,9 @@ CREATE TABLE public.tweet (
   sentiment         VARCHAR(100),
   sentiment_score   DECIMAL(5,5),
   created_at        TIMESTAMP,
-  lat               DECIMAL(8,8),
-  lon               DECIMAL(8,8),
   retweets          NUMERIC(15,0)
 
 );
 
-CREATE SEQUENCE public.hibernate_sequence
-  INCREMENT BY 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 3333
-  CACHE 1;
 
-
-SELECT COUNT(*) from public.tweet;
+SELECT COUNT(*) as TOTAL_TWEETS from public.tweet;

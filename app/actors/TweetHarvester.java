@@ -143,6 +143,7 @@ public class TweetHarvester extends UntypedActor {
             jedis = new Jedis(redisHost);
             for (Status status : tweets) {
                 org.json.simple.JSONObject tweetJson = convert(tweetConverter, status, hashTag);
+                tweetJson.put("harvested", true);
                 if (tweetJson != null) {
                     jedis.rpush(processingQueue, tweetJson.toJSONString());
                     tellSupervisor(hashTag);

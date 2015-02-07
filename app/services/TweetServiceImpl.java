@@ -74,7 +74,7 @@ public class TweetServiceImpl implements TweetService  {
 
     /**
      * Starts the TweetSupervisorActor to orchestrate the tweet harvest process.
-     * It is scheduled to start running once after 7 seconds that app starts.
+     * It is scheduled to start running 1 seconds after the application starts.
      *
      * @param hashTag
      * @param lang
@@ -86,7 +86,7 @@ public class TweetServiceImpl implements TweetService  {
         log.info("Starting Tweet Supervisor for " + hashTag);
 
         actorSystem.scheduler().scheduleOnce(
-                FiniteDuration.apply(7, TimeUnit.SECONDS),
+                FiniteDuration.apply(1, TimeUnit.SECONDS),
                 tweetSupervisor,
                 new Start(hashTag, lang),
                 actorSystem.dispatcher(),

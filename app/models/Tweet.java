@@ -29,8 +29,6 @@ public class Tweet {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "created_at")
     public Date createdAt;
-    public Double lat;
-    public Double lon;
     public Long retweets;
 
     @Override
@@ -45,8 +43,6 @@ public class Tweet {
                 .add("sentiment", sentiment)
                 .add("sentiment_score", sentimentScore)
                 .add("created_at", createdAt)
-                .add("lat", lat)
-                .add("lon", lon)
                 .add("retweets", retweets)
                 .toString();
     }
