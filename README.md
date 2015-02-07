@@ -1,4 +1,11 @@
-Installing on Ubuntu 13.10
+### App Design
+
+![Tweet Analyst System](/documents/tweetanalystsystem.png)
+
+
+---
+
+### Installing on Ubuntu 13.10
 
 1 - Install the JDK7+
 
