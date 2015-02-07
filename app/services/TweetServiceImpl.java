@@ -94,11 +94,6 @@ public class TweetServiceImpl implements TweetService  {
         );
     }
 
-    @Override
-    public void startHarvestingBy(String hashTag, String lang) {
-        tweetSupervisor.tell(new Start(hashTag, lang), null);
-    }
-
     /**
      * Find all tweets in DB
      */

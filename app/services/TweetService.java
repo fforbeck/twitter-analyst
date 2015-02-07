@@ -12,8 +12,6 @@ public interface TweetService {
 
     void postConstruct();
 
-    void startHarvestingBy(String hashTag, String lang);
-
     Iterable<Tweet> findAll();
 
     List<Tweet> findBySentiment(String sentiment);

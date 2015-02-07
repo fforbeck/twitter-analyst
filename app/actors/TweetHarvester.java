@@ -28,7 +28,7 @@ public class TweetHarvester extends UntypedActor {
 
     private Twitter twitter;
 
-    private String queueName;
+    private String processingQueue;
     private String redisHost;
     private String oauthAccessToken;
     private String oauthAccessTokenSecret;
@@ -44,7 +44,7 @@ public class TweetHarvester extends UntypedActor {
     public void preStart() throws Exception {
         super.preStart();
         Configuration configuration = Play.application().configuration();
-        queueName = configuration.getString("redis.processing.queue");
+        processingQueue = configuration.getString("redis.processing.queue");
         redisHost = configuration.getString("redis.host");
         oauthAccessToken = configuration.getString("twitter.oauth.accessToken");
         oauthAccessTokenSecret = configuration.getString("twitter.oauth.accessTokenSecret");
@@ -144,7 +144,7 @@ public class TweetHarvester extends UntypedActor {
             for (Status status : tweets) {
                 org.json.simple.JSONObject tweetJson = convert(tweetConverter, status, hashTag);
                 if (tweetJson != null) {
-                    jedis.rpush(queueName, tweetJson.toJSONString());
+                    jedis.rpush(processingQueue, tweetJson.toJSONString());
                     tellSupervisor(hashTag);
                 }
             }

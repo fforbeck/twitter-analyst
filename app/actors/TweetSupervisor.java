@@ -105,7 +105,7 @@ public final class TweetSupervisor extends UntypedActor {
         log.info("Starting tweet harvester for tag " + hashTag+ ", lang: " + lang);
 
         final String actorName = TweetHarvester.class.getSimpleName();
-        if (tweetReceiverActor == null) {
+        if (tweetHarvesterActor == null) {
             getContext().system().actorOf(Props.create(TweetHarvester.class), actorName);
         }
         tweetHarvesterActor = getContext().system().actorFor("user/" + actorName);

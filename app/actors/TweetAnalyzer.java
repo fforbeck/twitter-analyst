@@ -64,6 +64,7 @@ public class TweetAnalyzer extends UntypedActor {
             tweetJson = executeSentimentAnalysis(tweetJson);
             sendToPersistQueue(tweetJson);
             sendToLiveTweetsChannel(tweetJson);
+            getContext().stop(self());
         } else {
             unhandled(objMessage);
         }

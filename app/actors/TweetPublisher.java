@@ -60,7 +60,7 @@ public class TweetPublisher extends UntypedActor {
      */
     @Override
     public void postStop() throws Exception {
-        jedisPubSub.unsubscribe(tweetsChannel);
+        liveTweetsSubscriber.unsubscribe(tweetsChannel);
     }
 
     /**
@@ -77,7 +77,7 @@ public class TweetPublisher extends UntypedActor {
             // out.tell("Alright Dude, I got your message: " + message, self());
             Jedis jedis = new Jedis(redisHost);
             // listening for msgs
-            jedis.subscribe(jedisPubSub, tweetsChannel);
+            jedis.subscribe(liveTweetsSubscriber, tweetsChannel);
         } else {
             unhandled(message);
         }
@@ -87,7 +87,7 @@ public class TweetPublisher extends UntypedActor {
      * Creates a redis pubSub object which is responsible for listening all the messages
      * that are sent to the channel.
      */
-    private final JedisPubSub jedisPubSub = new JedisPubSub() {
+    private final JedisPubSub liveTweetsSubscriber = new JedisPubSub() {
 
         /**
          * For each new message that comes from the channel we sent it to
